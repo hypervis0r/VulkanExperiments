@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+#include "renderer/queue.h"
+
 namespace Engine
 {
 	class VulkanMemManager
@@ -11,6 +13,10 @@ namespace Engine
 	private:
 		vk::Device& LogicalDevice;
 		vk::PhysicalDevice& PhysicalDevice;
+		vk::CommandPool& CommandPool;
+		VulkanQueues& Queues;
+
+		vk::CommandBufferAllocateInfo CommandBufferAllocInfo;
 
 		uint32_t FindMemoryType(vk::PhysicalDevice& device, uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 
@@ -34,10 +40,26 @@ namespace Engine
 			vk::BufferUsageFlags usage, 
 			vk::MemoryPropertyFlags properties);
 
-		constexpr VulkanMemManager(vk::Device& device, vk::PhysicalDevice& physicalDevice) :
-			LogicalDevice(device),
-			PhysicalDevice(physicalDevice) {};
+		void CopyBuffer(
+			vk::Buffer& dst,
+			vk::Buffer& src,
+			vk::DeviceSize size);
 
 		VulkanMemManager() = delete;
+
+		constexpr VulkanMemManager(
+			vk::Device& device, 
+			vk::PhysicalDevice& physicalDevice, 
+			vk::CommandPool& commandPool,
+			VulkanQueues& queues) : 
+		LogicalDevice(device),
+		PhysicalDevice(physicalDevice),
+		CommandPool(commandPool),
+		Queues(queues) 
+		{
+			this->CommandBufferAllocInfo.level = vk::CommandBufferLevel::ePrimary;
+			this->CommandBufferAllocInfo.commandPool = CommandPool;
+			this->CommandBufferAllocInfo.commandBufferCount = 1;
+		};
 	};
 }

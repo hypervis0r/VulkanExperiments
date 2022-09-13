@@ -57,18 +57,33 @@ namespace Engine
 		VertexBuffer(std::shared_ptr<VulkanMemManager> manager, const std::vector<Vertex>& verts)
 			: Vertices(verts), MemManager(manager)
 		{
-			vk::DeviceSize bufferSize = sizeof(Vertices[0]) * Vertices.size();
+			const vk::DeviceSize bufferSize = sizeof(Vertices[0]) * Vertices.size();
+
+			// Create staging buffer
+			vk::Buffer stagingBuffer;
+			vk::DeviceMemory stagingBufferMemory;
+			this->MemManager->CreateBuffer(
+				stagingBuffer,
+				stagingBufferMemory,
+				bufferSize,
+				vk::BufferUsageFlagBits::eTransferSrc,
+				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+
+			// Copy vertices to staging buffer
+			auto data = this->MemManager->MapMemory(stagingBufferMemory, 0, bufferSize);
+			std::memcpy(data, Vertices.data(), static_cast<size_t>(bufferSize));
+			this->MemManager->UnmapMemory(stagingBufferMemory);
+
 			this->MemManager->CreateBuffer(
 				this->Buffer,
 				this->BufferMemory,
 				bufferSize,
-				vk::BufferUsageFlagBits::eVertexBuffer,
-				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+				vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+				vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-			// Copy vertices to device memory
-			auto data = this->MemManager->MapMemory(this->BufferMemory, 0, bufferSize);
-			std::memcpy(data, Vertices.data(), static_cast<size_t>(bufferSize));
-			this->MemManager->UnmapMemory(this->BufferMemory);
+			this->MemManager->CopyBuffer(this->Buffer, stagingBuffer, bufferSize);
+
+			this->MemManager->DestroyBuffer(stagingBuffer, stagingBufferMemory);
 		}
 	};
 }

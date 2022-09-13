@@ -463,7 +463,7 @@ namespace Engine
 
 		CreateCommandPool();
 
-		this->MemManager = std::make_shared<VulkanMemManager>(this->LogicalDevice, this->PhysicalDevice);
+		this->MemManager = std::make_shared<VulkanMemManager>(this->LogicalDevice, this->PhysicalDevice, this->CommandPool, this->Queues);
 
 		const std::vector<Vertex> vertices = {
 			{{0.0f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
