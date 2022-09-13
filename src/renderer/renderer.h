@@ -10,6 +10,7 @@
 #include <string>
 #include <limits>
 #include <algorithm>
+#include <memory>
 
 #define NOMINMAX
 
@@ -25,6 +26,7 @@
 #include "renderer/swapchain.h"
 #include "renderer/queue.h"
 #include "renderer/vertex.h"
+#include "renderer/vulkanmem.h"
 
 namespace Engine
 {
@@ -52,6 +54,9 @@ namespace Engine
 		vk::SurfaceKHR Surface;
 		VulkanQueues Queues;
 
+		// Unique ptr coz i want this initialized later
+		std::unique_ptr<VulkanMemManager> MemManager;
+
 		// Pipeline shit
 		vk::Pipeline GraphicsPipeline;
 		vk::PipelineLayout PipelineLayout;
@@ -71,7 +76,7 @@ namespace Engine
 		uint32_t CurrentFrame = 0;
 
 		// TEMP
-		VertexBuffer vertexBuffer;
+		std::unique_ptr<VertexBuffer> vertexBuffer;
 
 		void InitializeWindow();
 		void MainRenderLoop();

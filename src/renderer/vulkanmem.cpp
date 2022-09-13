@@ -2,9 +2,29 @@
 
 namespace Engine
 {
-	void VulkanMem::CreateBuffer(
-		vk::Device& device,
-		vk::PhysicalDevice& physicalDevice,
+	uint32_t VulkanMemManager::FindMemoryType(vk::PhysicalDevice& device, uint32_t typeFilter, vk::MemoryPropertyFlags properties)
+	{
+		auto memProperties = device.getMemoryProperties();
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+		{
+			if ((typeFilter & (1 << i)) &&
+				((memProperties.memoryTypes[i].propertyFlags & properties) == properties))
+			{
+				return i;
+			}
+		}
+
+		throw std::runtime_error("Failed to find suitable memory type.");
+	}
+
+	void VulkanMemManager::DestroyBuffer(vk::Buffer& buffer, vk::DeviceMemory& deviceMemory)
+	{
+		this->LogicalDevice.destroyBuffer(buffer);
+		this->LogicalDevice.freeMemory(deviceMemory);
+	}
+
+	void VulkanMemManager::CreateBuffer(
 		vk::Buffer& buffer,
 		vk::DeviceMemory& bufferMemory,
 		vk::DeviceSize size,
@@ -16,16 +36,16 @@ namespace Engine
 			size,
 			usage);
 
-		buffer = device.createBuffer(bufferInfo);
+		buffer = this->LogicalDevice.createBuffer(bufferInfo);
 
-		auto memRequirements = device.getBufferMemoryRequirements(buffer);
+		auto memRequirements = this->LogicalDevice.getBufferMemoryRequirements(buffer);
 
 		vk::MemoryAllocateInfo allocInfo(
 			memRequirements.size, 
-			FindMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties));
+			FindMemoryType(this->PhysicalDevice, memRequirements.memoryTypeBits, properties));
 
-		bufferMemory = device.allocateMemory(allocInfo);
+		bufferMemory = this->LogicalDevice.allocateMemory(allocInfo);
 
-		device.bindBufferMemory(buffer, bufferMemory, 0);
+		this->LogicalDevice.bindBufferMemory(buffer, bufferMemory, 0);
 	}
 }

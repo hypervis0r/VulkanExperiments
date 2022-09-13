@@ -40,23 +40,24 @@ namespace Engine
 
 	class VertexBuffer
 	{
+	private:
+		VulkanMemManager& MemManager;
+
 	public:
 		std::vector<Vertex> Vertices;
 		vk::Buffer Buffer;
 		vk::DeviceMemory BufferMemory;
 
-		void Destroy(vk::Device& device)
+		void Destroy()
 		{
-			VulkanMem::DestroyBuffer(device, this->Buffer, this->BufferMemory);
+			MemManager.DestroyBuffer(this->Buffer, this->BufferMemory);
 		}
 
-		VertexBuffer(vk::Device& device, vk::PhysicalDevice& physicalDevice, const std::vector<Vertex>& verts)
-			: Vertices(verts)
+		VertexBuffer(VulkanMemManager& manager, vk::Device& device, vk::PhysicalDevice& physicalDevice, const std::vector<Vertex>& verts)
+			: Vertices(verts), MemManager(manager)
 		{
 			vk::DeviceSize bufferSize = sizeof(Vertices[0]) * Vertices.size();
-			VulkanMem::CreateBuffer(
-				device,
-				physicalDevice,
+			MemManager.CreateBuffer(
 				this->Buffer,
 				this->BufferMemory,
 				bufferSize,
@@ -68,8 +69,5 @@ namespace Engine
 			std::memcpy(data, Vertices.data(), static_cast<size_t>(bufferSize));
 			device.unmapMemory(this->BufferMemory);
 		}
-
-		constexpr VertexBuffer() 
-			: Buffer(VK_NULL_HANDLE), BufferMemory(VK_NULL_HANDLE) {};
 	};
 }

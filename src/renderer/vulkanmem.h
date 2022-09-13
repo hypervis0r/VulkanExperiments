@@ -6,39 +6,28 @@
 
 namespace Engine
 {
-	static class VulkanMem
+	class VulkanMemManager
 	{
 	private:
-		static uint32_t FindMemoryType(vk::PhysicalDevice& device, uint32_t typeFilter, vk::MemoryPropertyFlags properties)
-		{
-			auto memProperties = device.getMemoryProperties();
+		vk::Device& LogicalDevice;
+		vk::PhysicalDevice& PhysicalDevice;
 
-			for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-			{
-				if ((typeFilter & (1 << i)) && 
-					((memProperties.memoryTypes[i].propertyFlags & properties) == properties))
-				{
-					return i;
-				}
-			}
-
-			throw std::runtime_error("Failed to find suitable memory type.");
-		}
+		uint32_t FindMemoryType(vk::PhysicalDevice& device, uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 
 	public:
-		static void DestroyBuffer(vk::Device& device, vk::Buffer& buffer, vk::DeviceMemory& deviceMemory)
-		{
-			device.destroyBuffer(buffer);
-			device.freeMemory(deviceMemory);
-		}
+		void DestroyBuffer(vk::Buffer& buffer, vk::DeviceMemory& deviceMemory);
 
-		static void CreateBuffer(
-			vk::Device& device,
-			vk::PhysicalDevice& physicalDevice,
+		void CreateBuffer(
 			vk::Buffer& buffer, 
 			vk::DeviceMemory& bufferMemory, 
 			vk::DeviceSize size, 
 			vk::BufferUsageFlags usage, 
 			vk::MemoryPropertyFlags properties);
+
+		constexpr VulkanMemManager(vk::Device& device, vk::PhysicalDevice& physicalDevice) :
+			LogicalDevice(device),
+			PhysicalDevice(physicalDevice) {};
+
+		VulkanMemManager() = delete;
 	};
 }

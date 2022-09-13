@@ -416,12 +416,12 @@ namespace Engine
 			this->Swapchain.SwapChainExtent);
 		commandBuffer.setScissor(0, 1, &scissor);
 
-		const std::array<vk::Buffer, 1> vertexBuffers = { this->vertexBuffer.Buffer };
+		const std::array<vk::Buffer, 1> vertexBuffers = { this->vertexBuffer->Buffer };
 		constexpr std::array<vk::DeviceSize, 1> offsets = { 0 };
 
 		commandBuffer.bindVertexBuffers(0, 1, vertexBuffers.data(), offsets.data());
 
-		commandBuffer.draw(vertexBuffer.Vertices.size(), 1, 0, 0);
+		commandBuffer.draw(vertexBuffer->Vertices.size(), 1, 0, 0);
 
 		commandBuffer.endRenderPass();
 		commandBuffer.end();
@@ -463,12 +463,14 @@ namespace Engine
 
 		CreateCommandPool();
 
+		this->MemManager = std::make_unique<VulkanMemManager>(this->LogicalDevice, this->PhysicalDevice);
+
 		const std::vector<Vertex> vertices = {
 			{{0.0f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
 			{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
 			{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 		};
-		this->vertexBuffer = VertexBuffer(this->LogicalDevice, this->PhysicalDevice, vertices);
+		this->vertexBuffer = std::make_unique<VertexBuffer>(*this->MemManager, this->LogicalDevice, this->PhysicalDevice, vertices);
 
 		CreateCommandBuffer();
 
@@ -487,7 +489,7 @@ namespace Engine
 
 		this->Swapchain.Destroy();
 
-		this->vertexBuffer.Destroy(this->LogicalDevice);
+		this->vertexBuffer->Destroy();
 
 		// Command pool
 		this->LogicalDevice.destroyCommandPool(this->CommandPool);
