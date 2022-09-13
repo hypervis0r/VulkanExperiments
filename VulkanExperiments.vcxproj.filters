@@ -44,7 +44,7 @@
     <ClInclude Include="src\renderer\swapchain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\queuefamily.h">
+    <ClInclude Include="src\renderer\queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\vertex.h">

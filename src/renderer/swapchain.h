@@ -9,7 +9,7 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-#include "renderer/queuefamily.h"
+#include "renderer/queue.h"
 
 namespace Engine
 {

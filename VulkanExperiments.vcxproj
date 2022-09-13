@@ -177,7 +177,7 @@
   <ItemGroup>
     <ClInclude Include="src\files.h" />
     <ClInclude Include="src\main.h" />
-    <ClInclude Include="src\renderer\queuefamily.h" />
+    <ClInclude Include="src\renderer\queue.h" />
     <ClInclude Include="src\renderer\renderer.h" />
     <ClInclude Include="src\renderer\swapchain.h" />
     <ClInclude Include="src\renderer\vertex.h" />
