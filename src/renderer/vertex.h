@@ -57,7 +57,7 @@ namespace Engine
 			: Vertices(verts), MemManager(manager)
 		{
 			vk::DeviceSize bufferSize = sizeof(Vertices[0]) * Vertices.size();
-			MemManager.CreateBuffer(
+			this->MemManager.CreateBuffer(
 				this->Buffer,
 				this->BufferMemory,
 				bufferSize,
@@ -65,9 +65,9 @@ namespace Engine
 				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
 			// Copy vertices to device memory
-			auto data = device.mapMemory(this->BufferMemory, 0, bufferSize);
+			auto data = this->MemManager.MapMemory(this->BufferMemory, 0, bufferSize);
 			std::memcpy(data, Vertices.data(), static_cast<size_t>(bufferSize));
-			device.unmapMemory(this->BufferMemory);
+			this->MemManager.UnmapMemory(this->BufferMemory);
 		}
 	};
 }

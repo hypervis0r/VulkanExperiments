@@ -15,6 +15,16 @@ namespace Engine
 		uint32_t FindMemoryType(vk::PhysicalDevice& device, uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 
 	public:
+		void* MapMemory(vk::DeviceMemory& memory, vk::DeviceSize offset, vk::DeviceSize size)
+		{
+			return this->LogicalDevice.mapMemory(memory, offset, size);
+		}
+
+		void UnmapMemory(vk::DeviceMemory& memory)
+		{
+			this->LogicalDevice.unmapMemory(memory);
+		}
+
 		void DestroyBuffer(vk::Buffer& buffer, vk::DeviceMemory& deviceMemory);
 
 		void CreateBuffer(
