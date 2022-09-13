@@ -670,7 +670,7 @@ namespace Engine
 				VK_NULL_HANDLE).value;
 		}
 		// If the swap chain is out of date (resized, etc.), we need to recreate it
-		catch (vk::OutOfDateKHRError& ex)
+		catch (vk::OutOfDateKHRError&)
 		{
 			this->Swapchain.RecreateSwapChain(this->Surface, this->RenderPass);
 			return;
@@ -714,7 +714,7 @@ namespace Engine
 			if (presentResult == vk::Result::eSuboptimalKHR)
 				throw vk::OutOfDateKHRError("");
 		}
-		catch (vk::OutOfDateKHRError& ex)
+		catch (vk::OutOfDateKHRError&)
 		{
 			this->Swapchain.RecreateSwapChain(this->Surface, this->RenderPass);
 		};
