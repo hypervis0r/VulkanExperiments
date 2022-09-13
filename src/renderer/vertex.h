@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <cstring>
+#include <memory>
 
 #include "renderer/vulkanmem.h"
 
@@ -41,7 +42,7 @@ namespace Engine
 	class VertexBuffer
 	{
 	private:
-		VulkanMemManager& MemManager;
+		std::shared_ptr<VulkanMemManager> MemManager;
 
 	public:
 		std::vector<Vertex> Vertices;
@@ -50,14 +51,14 @@ namespace Engine
 
 		void Destroy()
 		{
-			MemManager.DestroyBuffer(this->Buffer, this->BufferMemory);
+			MemManager->DestroyBuffer(this->Buffer, this->BufferMemory);
 		}
 
-		VertexBuffer(VulkanMemManager& manager, const std::vector<Vertex>& verts)
+		VertexBuffer(std::shared_ptr<VulkanMemManager> manager, const std::vector<Vertex>& verts)
 			: Vertices(verts), MemManager(manager)
 		{
 			vk::DeviceSize bufferSize = sizeof(Vertices[0]) * Vertices.size();
-			this->MemManager.CreateBuffer(
+			this->MemManager->CreateBuffer(
 				this->Buffer,
 				this->BufferMemory,
 				bufferSize,
@@ -65,9 +66,9 @@ namespace Engine
 				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
 			// Copy vertices to device memory
-			auto data = this->MemManager.MapMemory(this->BufferMemory, 0, bufferSize);
+			auto data = this->MemManager->MapMemory(this->BufferMemory, 0, bufferSize);
 			std::memcpy(data, Vertices.data(), static_cast<size_t>(bufferSize));
-			this->MemManager.UnmapMemory(this->BufferMemory);
+			this->MemManager->UnmapMemory(this->BufferMemory);
 		}
 	};
 }

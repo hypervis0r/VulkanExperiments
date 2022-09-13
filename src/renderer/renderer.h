@@ -54,8 +54,8 @@ namespace Engine
 		vk::SurfaceKHR Surface;
 		VulkanQueues Queues;
 
-		// Unique ptr coz i want this initialized later
-		std::unique_ptr<VulkanMemManager> MemManager;
+		// smart ptr coz i want this initialized later
+		std::shared_ptr<VulkanMemManager> MemManager;
 
 		// Pipeline shit
 		vk::Pipeline GraphicsPipeline;

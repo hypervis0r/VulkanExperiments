@@ -463,14 +463,14 @@ namespace Engine
 
 		CreateCommandPool();
 
-		this->MemManager = std::make_unique<VulkanMemManager>(this->LogicalDevice, this->PhysicalDevice);
+		this->MemManager = std::make_shared<VulkanMemManager>(this->LogicalDevice, this->PhysicalDevice);
 
 		const std::vector<Vertex> vertices = {
 			{{0.0f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
 			{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
 			{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 		};
-		this->vertexBuffer = std::make_unique<VertexBuffer>(*this->MemManager, vertices);
+		this->vertexBuffer = std::make_unique<VertexBuffer>(this->MemManager, vertices);
 
 		CreateCommandBuffer();
 
