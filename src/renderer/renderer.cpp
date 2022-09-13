@@ -169,9 +169,8 @@ namespace Engine
 		// Create the logical device
 		this->LogicalDevice = this->PhysicalDevice.createDevice(createInfo);
 
-		// Create the command queues
-		this->GraphicsQueue = this->LogicalDevice.getQueue(indices.GraphicsFamily.value(), 0);
-		this->PresentationQueue = this->LogicalDevice.getQueue(indices.PresentationFamily.value(), 0);
+		// Get queues
+		Queues.GetQueues(this->LogicalDevice, indices);
 	}
 
 	void Renderer::CreateRenderSurface()
@@ -563,7 +562,7 @@ namespace Engine
 			1, &this->CommandBuffers[this->CurrentFrame],
 			1, signalSemaphores.data());
 
-		vk::resultCheck(this->GraphicsQueue.submit(1, &submitInfo, this->InFlightFences[this->CurrentFrame]), 
+		vk::resultCheck(this->Queues.GraphicsQueue.submit(1, &submitInfo, this->InFlightFences[this->CurrentFrame]),
 			"Failed to submit command buffer.");
 
 		const std::array<vk::SwapchainKHR, 1> swapChains = { this->Swapchain.Swapchain };
@@ -576,7 +575,7 @@ namespace Engine
 		// Present swap chain
 		try
 		{
-			auto presentResult = this->PresentationQueue.presentKHR(presentInfo);
+			auto presentResult = this->Queues.PresentationQueue.presentKHR(presentInfo);
 
 			// vulkan-hpp specifies eSuboptimalKHR as success, but whatever
 			if (presentResult == vk::Result::eSuboptimalKHR)

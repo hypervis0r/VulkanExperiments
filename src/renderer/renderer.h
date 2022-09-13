@@ -50,8 +50,7 @@ namespace Engine
 		vk::PhysicalDevice PhysicalDevice = VK_NULL_HANDLE;
 		vk::Device LogicalDevice = VK_NULL_HANDLE;
 		vk::SurfaceKHR Surface;
-		vk::Queue GraphicsQueue;
-		vk::Queue PresentationQueue;
+		VulkanQueues Queues;
 
 		// Pipeline shit
 		vk::Pipeline GraphicsPipeline;

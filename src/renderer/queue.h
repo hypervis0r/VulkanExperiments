@@ -39,4 +39,21 @@ namespace Engine
 			}
 		}
 	};
+
+	struct VulkanQueues
+	{
+		vk::Queue GraphicsQueue;
+		vk::Queue PresentationQueue;
+
+		void GetQueues(vk::Device& device, const QueueFamilyIndices& indices)
+		{
+			// Create the command queues
+			this->GraphicsQueue = device.getQueue(indices.GraphicsFamily.value(), 0);
+			this->PresentationQueue = device.getQueue(indices.PresentationFamily.value(), 0);
+		}
+
+		constexpr VulkanQueues() :
+			GraphicsQueue(VK_NULL_HANDLE),
+			PresentationQueue(VK_NULL_HANDLE) {}
+	};
 }
