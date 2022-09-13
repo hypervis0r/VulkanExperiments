@@ -21,6 +21,12 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <chrono>
+
 #include "files.h"
 
 #include "renderer/swapchain.h"
@@ -30,6 +36,13 @@
 
 namespace Engine
 {
+	struct UniformBufferObject
+	{
+		glm::mat4 model;
+		glm::mat4 view;
+		glm::mat4 proj;
+	};
+
 	class Renderer
 	{
 	private:
@@ -79,6 +92,13 @@ namespace Engine
 		std::unique_ptr<VertexInputBuffer<Vertex>> vertexBuffer;
 		std::unique_ptr<VertexInputBuffer<Index>> indexBuffer;
 
+		// Uniform shit
+		std::vector<vk::Buffer> UniformBuffers;
+		std::vector<vk::DeviceMemory> UniformBuffersMemory;
+		vk::DescriptorSetLayout DescriptorSetLayout;
+		vk::DescriptorPool DescriptorPool;
+		std::vector<vk::DescriptorSet> DescriptorSets;
+
 		void InitializeWindow();
 		void MainRenderLoop();
 		void Cleanup();
@@ -99,6 +119,13 @@ namespace Engine
 		void CreateRenderSurface();
 		void CreateGraphicsPipeline();
 		void CreateRenderPass();
+		
+		// Uniform shit
+		void CreateDescriptorSetLayout();
+		void CreateDescriptorPool();
+		void CreateDescriptorSets();
+		void CreateUniformBuffers();
+		void UpdateUniformBuffer(uint32_t currentImage);
 
 		// Shader shit
 		template<std::size_t N>
