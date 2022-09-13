@@ -18,6 +18,8 @@ namespace Engine
 		glm::vec3 pos;
 		glm::vec3 color;
 
+		constexpr static vk::BufferUsageFlagBits BufferType = vk::BufferUsageFlagBits::eVertexBuffer;
+
 		constexpr static void GetBindingDescription(vk::VertexInputBindingDescription& bindingDescription)
 		{
 			bindingDescription.binding = 0;
@@ -39,13 +41,14 @@ namespace Engine
 		}
 	};
 
-	class VertexBuffer
+	template<typename T>
+	class ObjectBuffer
 	{
 	private:
 		std::shared_ptr<VulkanMemManager> MemManager;
 
 	public:
-		std::vector<Vertex> Vertices;
+		std::vector<T> Objects;
 		vk::Buffer Buffer;
 		vk::DeviceMemory BufferMemory;
 
@@ -54,10 +57,10 @@ namespace Engine
 			MemManager->DestroyBuffer(this->Buffer, this->BufferMemory);
 		}
 
-		VertexBuffer(std::shared_ptr<VulkanMemManager> manager, const std::vector<Vertex>& verts)
-			: Vertices(verts), MemManager(manager)
+		ObjectBuffer(std::shared_ptr<VulkanMemManager> manager, const std::vector<T>& verts)
+			: Objects(verts), MemManager(manager)
 		{
-			const vk::DeviceSize bufferSize = sizeof(Vertices[0]) * Vertices.size();
+			const vk::DeviceSize bufferSize = sizeof(Objects[0]) * Objects.size();
 
 			// Create staging buffer
 			vk::Buffer stagingBuffer;
@@ -71,14 +74,14 @@ namespace Engine
 
 			// Copy vertices to staging buffer
 			auto data = this->MemManager->MapMemory(stagingBufferMemory, 0, bufferSize);
-			std::memcpy(data, Vertices.data(), static_cast<size_t>(bufferSize));
+			std::memcpy(data, Objects.data(), static_cast<size_t>(bufferSize));
 			this->MemManager->UnmapMemory(stagingBufferMemory);
 
 			this->MemManager->CreateBuffer(
 				this->Buffer,
 				this->BufferMemory,
 				bufferSize,
-				vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+				vk::BufferUsageFlagBits::eTransferDst | T::BufferType,
 				vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 			this->MemManager->CopyBuffer(this->Buffer, stagingBuffer, bufferSize);

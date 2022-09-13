@@ -421,7 +421,7 @@ namespace Engine
 
 		commandBuffer.bindVertexBuffers(0, 1, vertexBuffers.data(), offsets.data());
 
-		commandBuffer.draw(vertexBuffer->Vertices.size(), 1, 0, 0);
+		commandBuffer.draw(vertexBuffer->Objects.size(), 1, 0, 0);
 
 		commandBuffer.endRenderPass();
 		commandBuffer.end();
@@ -470,7 +470,7 @@ namespace Engine
 			{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
 			{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 		};
-		this->vertexBuffer = std::make_unique<VertexBuffer>(this->MemManager, vertices);
+		this->vertexBuffer = std::make_unique<ObjectBuffer<Vertex>>(this->MemManager, vertices);
 
 		CreateCommandBuffer();
 
