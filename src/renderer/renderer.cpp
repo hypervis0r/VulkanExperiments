@@ -420,8 +420,9 @@ namespace Engine
 		constexpr std::array<vk::DeviceSize, 1> offsets = { 0 };
 
 		commandBuffer.bindVertexBuffers(0, 1, vertexBuffers.data(), offsets.data());
+		commandBuffer.bindIndexBuffer(this->indexBuffer->Buffer, 0, Index::IndexType);
 
-		commandBuffer.draw(vertexBuffer->Objects.size(), 1, 0, 0);
+		commandBuffer.drawIndexed(this->indexBuffer->Objects.size(), 1, 0, 0, 0);
 
 		commandBuffer.endRenderPass();
 		commandBuffer.end();
@@ -466,11 +467,17 @@ namespace Engine
 		this->MemManager = std::make_shared<VulkanMemManager>(this->LogicalDevice, this->PhysicalDevice, this->CommandPool, this->Queues);
 
 		const std::vector<Vertex> vertices = {
-			{{0.0f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-			{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-			{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+			{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+			{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+			{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+			{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
 		};
 		this->vertexBuffer = std::make_unique<VertexInputBuffer<Vertex>>(this->MemManager, vertices);
+
+		const std::vector<Index> indices = {
+			0, 1, 2, 2, 3, 0
+		};
+		this->indexBuffer = std::make_unique<VertexInputBuffer<Index>>(this->MemManager, indices);
 
 		CreateCommandBuffer();
 
@@ -490,6 +497,7 @@ namespace Engine
 		this->Swapchain.Destroy();
 
 		this->vertexBuffer->Destroy();
+		this->indexBuffer->Destroy();
 
 		// Command pool
 		this->LogicalDevice.destroyCommandPool(this->CommandPool);

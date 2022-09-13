@@ -41,6 +41,16 @@ namespace Engine
 		}
 	};
 
+	struct Index
+	{
+		uint32_t index;
+
+		constexpr static vk::BufferUsageFlagBits BufferType = vk::BufferUsageFlagBits::eIndexBuffer;
+		constexpr static vk::IndexType IndexType = vk::IndexType::eUint32;
+
+		constexpr Index(uint32_t idx) : index(idx) {}
+	};
+
 	template<typename T>
 	class VertexInputBuffer
 	{

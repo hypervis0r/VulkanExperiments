@@ -77,6 +77,7 @@ namespace Engine
 
 		// TEMP
 		std::unique_ptr<VertexInputBuffer<Vertex>> vertexBuffer;
+		std::unique_ptr<VertexInputBuffer<Index>> indexBuffer;
 
 		void InitializeWindow();
 		void MainRenderLoop();
