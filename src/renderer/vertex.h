@@ -42,7 +42,7 @@ namespace Engine
 	};
 
 	template<typename T>
-	class ObjectBuffer
+	class VertexInputBuffer
 	{
 	private:
 		std::shared_ptr<VulkanMemManager> MemManager;
@@ -57,7 +57,7 @@ namespace Engine
 			MemManager->DestroyBuffer(this->Buffer, this->BufferMemory);
 		}
 
-		ObjectBuffer(std::shared_ptr<VulkanMemManager> manager, const std::vector<T>& verts)
+		VertexInputBuffer(std::shared_ptr<VulkanMemManager> manager, const std::vector<T>& verts)
 			: Objects(verts), MemManager(manager)
 		{
 			const vk::DeviceSize bufferSize = sizeof(Objects[0]) * Objects.size();

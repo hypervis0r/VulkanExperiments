@@ -470,7 +470,7 @@ namespace Engine
 			{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
 			{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 		};
-		this->vertexBuffer = std::make_unique<ObjectBuffer<Vertex>>(this->MemManager, vertices);
+		this->vertexBuffer = std::make_unique<VertexInputBuffer<Vertex>>(this->MemManager, vertices);
 
 		CreateCommandBuffer();
 

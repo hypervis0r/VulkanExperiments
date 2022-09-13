@@ -76,7 +76,7 @@ namespace Engine
 		uint32_t CurrentFrame = 0;
 
 		// TEMP
-		std::unique_ptr<ObjectBuffer<Vertex>> vertexBuffer;
+		std::unique_ptr<VertexInputBuffer<Vertex>> vertexBuffer;
 
 		void InitializeWindow();
 		void MainRenderLoop();
