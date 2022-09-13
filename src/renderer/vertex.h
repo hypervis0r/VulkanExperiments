@@ -53,7 +53,7 @@ namespace Engine
 			MemManager.DestroyBuffer(this->Buffer, this->BufferMemory);
 		}
 
-		VertexBuffer(VulkanMemManager& manager, vk::Device& device, vk::PhysicalDevice& physicalDevice, const std::vector<Vertex>& verts)
+		VertexBuffer(VulkanMemManager& manager, const std::vector<Vertex>& verts)
 			: Vertices(verts), MemManager(manager)
 		{
 			vk::DeviceSize bufferSize = sizeof(Vertices[0]) * Vertices.size();

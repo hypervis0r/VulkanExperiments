@@ -470,7 +470,7 @@ namespace Engine
 			{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
 			{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 		};
-		this->vertexBuffer = std::make_unique<VertexBuffer>(*this->MemManager, this->LogicalDevice, this->PhysicalDevice, vertices);
+		this->vertexBuffer = std::make_unique<VertexBuffer>(*this->MemManager, vertices);
 
 		CreateCommandBuffer();
 
