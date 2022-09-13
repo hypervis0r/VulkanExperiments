@@ -24,6 +24,7 @@
 
 #include "renderer/swapchain.h"
 #include "renderer/queuefamily.h"
+#include "renderer/vertex.h"
 
 namespace Engine
 {
@@ -70,6 +71,9 @@ namespace Engine
 		std::vector<vk::Fence> InFlightFences;
 		uint32_t CurrentFrame = 0;
 
+		// TEMP
+		VertexBuffer vertexBuffer;
+
 		void InitializeWindow();
 		void MainRenderLoop();
 		void Cleanup();
@@ -111,7 +115,8 @@ namespace Engine
 			WindowWidth(Width),
 			WindowHeight(Height),
 			Window(nullptr),
-			ValidationLayersEnabled(EnableValidationLayers) {}
+			ValidationLayersEnabled(EnableValidationLayers) 
+		{}
 
 		void Run()
 		{

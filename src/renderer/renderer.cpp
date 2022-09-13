@@ -233,11 +233,16 @@ namespace Engine
 			dynamicStates.data());
 
 		// Vertex input
-		// TODO: Update with VAO shit
-		constexpr vk::PipelineVertexInputStateCreateInfo vertexInputInfo(
+		vk::VertexInputBindingDescription bindingDesc;
+		std::array<vk::VertexInputAttributeDescription, 2> attributeDescs;
+		
+		Vertex::GetBindingDescription(bindingDesc);
+		Vertex::GetAttributeDescriptions(attributeDescs);
+
+		const vk::PipelineVertexInputStateCreateInfo vertexInputInfo(
 			vk::PipelineVertexInputStateCreateFlags::Flags(),
-			0, nullptr,
-			0, nullptr);
+			1, &bindingDesc,
+			attributeDescs.size(), attributeDescs.data());
 
 		// Input assembly
 		constexpr vk::PipelineInputAssemblyStateCreateInfo inputAssembly(
@@ -412,7 +417,12 @@ namespace Engine
 			this->Swapchain.SwapChainExtent);
 		commandBuffer.setScissor(0, 1, &scissor);
 
-		commandBuffer.draw(3, 1, 0, 0);
+		const std::array<vk::Buffer, 1> vertexBuffers = { this->vertexBuffer.Buffer };
+		constexpr std::array<vk::DeviceSize, 1> offsets = { 0 };
+
+		commandBuffer.bindVertexBuffers(0, 1, vertexBuffers.data(), offsets.data());
+
+		commandBuffer.draw(vertexBuffer.Vertices.size(), 1, 0, 0);
 
 		commandBuffer.endRenderPass();
 		commandBuffer.end();
@@ -453,6 +463,14 @@ namespace Engine
 		this->Swapchain.CreateFramebuffers(this->RenderPass);
 
 		CreateCommandPool();
+
+		const std::vector<Vertex> vertices = {
+			{{0.0f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+			{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+			{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+		};
+		this->vertexBuffer = VertexBuffer(this->LogicalDevice, this->PhysicalDevice, vertices);
+
 		CreateCommandBuffer();
 
 		CreateSyncObjects();
@@ -469,6 +487,8 @@ namespace Engine
 		}
 
 		this->Swapchain.Destroy();
+
+		this->vertexBuffer.Destroy(this->LogicalDevice);
 
 		// Command pool
 		this->LogicalDevice.destroyCommandPool(this->CommandPool);

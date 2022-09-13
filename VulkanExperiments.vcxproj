@@ -172,6 +172,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\renderer\swapchain.cpp" />
+    <ClCompile Include="src\renderer\vulkanmem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\files.h" />
@@ -179,6 +180,8 @@
     <ClInclude Include="src\renderer\queuefamily.h" />
     <ClInclude Include="src\renderer\renderer.h" />
     <ClInclude Include="src\renderer\swapchain.h" />
+    <ClInclude Include="src\renderer\vertex.h" />
+    <ClInclude Include="src\renderer\vulkanmem.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitattributes" />
