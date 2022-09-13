@@ -59,7 +59,7 @@ namespace Engine
 			throw std::runtime_error("Failed to get required GLFW instance extensions");
 
 		vk::InstanceCreateInfo createInfo(
-			vk::InstanceCreateFlags::Flags(),
+			{},
 			&appInfo,
 			0, nullptr,
 			glfwExtensionCount, glfwExtensions);
@@ -140,7 +140,7 @@ namespace Engine
 		for (const auto queueFamily : uniqueQueueFamilies)
 		{
 			vk::DeviceQueueCreateInfo queueCreateInfo(
-				vk::DeviceQueueCreateFlags::Flags(),
+				{},
 				queueFamily,
 				1,
 				&queuePriority);
@@ -151,7 +151,7 @@ namespace Engine
 		vk::PhysicalDeviceFeatures deviceFeatures{};
 
 		vk::DeviceCreateInfo createInfo(
-			vk::DeviceCreateFlags::Flags(), 
+			{},
 			queueCreateInfos.size(),
 			queueCreateInfos.data(),
 			0, nullptr,
@@ -176,7 +176,7 @@ namespace Engine
 	void Renderer::CreateRenderSurface()
 	{
 		vk::Win32SurfaceCreateInfoKHR createInfo(
-			vk::Win32SurfaceCreateFlagsKHR::Flags(), 
+			{},
 			GetModuleHandle(nullptr), 
 			glfwGetWin32Window(this->Window));
 
@@ -208,13 +208,13 @@ namespace Engine
 		CreateShaderModule(std::span{ fragShaderCode }, fragShaderModule);
 
 		vk::PipelineShaderStageCreateInfo vertShaderStageInfo(
-			vk::PipelineShaderStageCreateFlags::Flags(),
+			{},
 			vk::ShaderStageFlagBits::eVertex,
 			vertShaderModule,
 			"main");
 
 		vk::PipelineShaderStageCreateInfo fragShaderStageInfo(
-			vk::PipelineShaderStageCreateFlags::Flags(),
+			{},
 			vk::ShaderStageFlagBits::eFragment,
 			fragShaderModule,
 			"main");
@@ -227,7 +227,7 @@ namespace Engine
 			vk::DynamicState::eScissor
 		};
 		const vk::PipelineDynamicStateCreateInfo dynamicState(
-			vk::PipelineDynamicStateCreateFlags::Flags(),
+			{},
 			dynamicStates.size(),
 			dynamicStates.data());
 
@@ -239,13 +239,13 @@ namespace Engine
 		Vertex::GetAttributeDescriptions(attributeDescs);
 
 		const vk::PipelineVertexInputStateCreateInfo vertexInputInfo(
-			vk::PipelineVertexInputStateCreateFlags::Flags(),
+			{},
 			1, &bindingDesc,
 			attributeDescs.size(), attributeDescs.data());
 
 		// Input assembly
 		constexpr vk::PipelineInputAssemblyStateCreateInfo inputAssembly(
-			vk::PipelineInputAssemblyStateCreateFlags::Flags(),
+			{},
 			vk::PrimitiveTopology::eTriangleList,
 			VK_FALSE);
 
@@ -256,7 +256,7 @@ namespace Engine
 
 		// Rasterizer
 		vk::PipelineRasterizationStateCreateInfo rasterizer(
-			vk::PipelineRasterizationStateCreateFlags::Flags(),
+			{},
 			VK_FALSE,
 			VK_FALSE,
 			vk::PolygonMode::eFill,
@@ -323,7 +323,7 @@ namespace Engine
 	void Renderer::CreateRenderPass()
 	{
 		const vk::AttachmentDescription colorAttachment(
-			vk::AttachmentDescriptionFlags::Flags(),
+			{},
 			this->Swapchain.SwapChainImageFormat,
 			vk::SampleCountFlagBits::e1,
 			vk::AttachmentLoadOp::eClear, // TODO: Change to eLoad
@@ -341,18 +341,18 @@ namespace Engine
 			VK_SUBPASS_EXTERNAL, 0,
 			vk::PipelineStageFlagBits::eColorAttachmentOutput,
 			vk::PipelineStageFlagBits::eColorAttachmentOutput,
-			vk::AccessFlags::Flags(),
+			{},
 			vk::AccessFlagBits::eColorAttachmentWrite);
 
 		vk::SubpassDescription subpass(
-			vk::SubpassDescriptionFlags::Flags(),
+			{},
 			vk::PipelineBindPoint::eGraphics,
 			0, nullptr,
 			1, &colorAttachmentRef);
 
 		// Create render pass
 		vk::RenderPassCreateInfo renderPassInfo(
-			vk::RenderPassCreateFlags::Flags(),
+			{},
 			1, &colorAttachment,
 			1, &subpass,
 			1, &dependency);
@@ -457,7 +457,7 @@ namespace Engine
 			vk::ShaderStageFlagBits::eVertex);
 
 		vk::DescriptorSetLayoutCreateInfo layoutInfo(
-			vk::DescriptorSetLayoutCreateFlags::Flags(), 1, &uboLayoutBinding);
+			{}, 1, &uboLayoutBinding);
 
 		this->DescriptorSetLayout = this->LogicalDevice.createDescriptorSetLayout(layoutInfo);
 	}

@@ -32,7 +32,7 @@ namespace Engine
 		vk::MemoryPropertyFlags properties)
 	{
 		vk::BufferCreateInfo bufferInfo(
-			vk::BufferCreateFlags::Flags(),
+			{},
 			size,
 			usage);
 
