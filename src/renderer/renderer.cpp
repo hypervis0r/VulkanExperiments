@@ -233,7 +233,7 @@ namespace Engine
 
 		// Vertex input
 		vk::VertexInputBindingDescription bindingDesc;
-		std::array<vk::VertexInputAttributeDescription, 2> attributeDescs;
+		std::array<vk::VertexInputAttributeDescription, 3> attributeDescs;
 		
 		Vertex::GetBindingDescription(bindingDesc);
 		Vertex::GetAttributeDescriptions(attributeDescs);
@@ -473,18 +473,20 @@ namespace Engine
 			this->Uniforms.push_back(uniform);
 		}
 
+		Image texture(this->LogicalDevice, this->MemManager, "textures/queen.jpg");
+
 		this->DescriptorPool = std::make_unique<VulkanDescriptorPool>(this->LogicalDevice, this->MemManager, this->MAX_FRAMES_IN_FLIGHT);
-		this->DescriptorPool->CreateDescriptorSets(this->Uniforms);
+		this->DescriptorPool->CreateDescriptorSets(this->Uniforms, texture);
 
 		CreateGraphicsPipeline();
 		
 		this->Swapchain.CreateFramebuffers(this->RenderPass);
 
 		const std::vector<Vertex> vertices = {
-			{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-			{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-			{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-			{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
+			{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+			{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+			{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+			{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
 		};
 		this->vertexBuffer = std::make_unique<VertexInputBuffer<Vertex>>(this->MemManager, vertices);
 

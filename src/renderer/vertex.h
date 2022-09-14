@@ -17,6 +17,7 @@ namespace Engine
 	{
 		glm::vec3 pos;
 		glm::vec3 color;
+		glm::vec2 texCoord;
 
 		constexpr static vk::BufferUsageFlagBits BufferType = vk::BufferUsageFlagBits::eVertexBuffer;
 
@@ -27,7 +28,7 @@ namespace Engine
 			bindingDescription.inputRate = vk::VertexInputRate::eVertex;
 		}
 
-		constexpr static void GetAttributeDescriptions(std::array<vk::VertexInputAttributeDescription, 2>& attributeDescriptions)
+		constexpr static void GetAttributeDescriptions(std::array<vk::VertexInputAttributeDescription, 3>& attributeDescriptions)
 		{
 			attributeDescriptions[0].binding = 0;
 			attributeDescriptions[0].location = 0;
@@ -38,6 +39,11 @@ namespace Engine
 			attributeDescriptions[1].location = 1;
 			attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat; // vec3
 			attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+			attributeDescriptions[2].binding = 0;
+			attributeDescriptions[2].location = 2;
+			attributeDescriptions[2].format = vk::Format::eR32G32Sfloat; // vec2
+			attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 		}
 	};
 

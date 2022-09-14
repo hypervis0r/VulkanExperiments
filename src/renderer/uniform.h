@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "renderer/vulkanmem.h"
+#include "renderer/image.h"
 
 namespace Engine
 {
@@ -62,7 +63,7 @@ namespace Engine
 		std::vector<vk::DescriptorSet> DescriptorSets;
 
 		template <typename T>
-		void CreateDescriptorSets(std::vector<Uniform<T>>& uniforms)
+		void CreateDescriptorSets(std::vector<Uniform<T>>& uniforms, Image texture)
 		{
 			std::vector<vk::DescriptorSetLayout> layouts(this->PoolSize, this->DescriptorSetLayout);
 
@@ -78,14 +79,29 @@ namespace Engine
 					0,
 					uniforms[i].UniformSize);
 
-				vk::WriteDescriptorSet descWrite(
-					this->DescriptorSets[i],
-					0, 0,
-					1, vk::DescriptorType::eUniformBuffer,
-					nullptr,
-					&bufferInfo);
+				// TODO: Make this better
+				vk::DescriptorImageInfo imageInfo(
+					texture.Sampler, 
+					texture.ImageView, 
+					vk::ImageLayout::eShaderReadOnlyOptimal);
 
-				this->LogicalDevice.updateDescriptorSets(1, &descWrite, 0, nullptr);
+				std::array<vk::WriteDescriptorSet, 2> descWrites{};
+
+				descWrites[0].dstSet = this->DescriptorSets[i];
+				descWrites[0].dstBinding = 0;
+				descWrites[0].dstArrayElement = 0;
+				descWrites[0].descriptorType = vk::DescriptorType::eUniformBuffer;
+				descWrites[0].descriptorCount = 1;
+				descWrites[0].pBufferInfo = &bufferInfo;
+
+				descWrites[1].dstSet = this->DescriptorSets[i];
+				descWrites[1].dstBinding = 1;
+				descWrites[1].dstArrayElement = 0;
+				descWrites[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+				descWrites[1].descriptorCount = 1;
+				descWrites[1].pImageInfo = &imageInfo;
+
+				this->LogicalDevice.updateDescriptorSets(descWrites, nullptr);
 			}
 		}
 

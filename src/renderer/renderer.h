@@ -34,6 +34,7 @@
 #include "renderer/vertex.h"
 #include "renderer/vulkanmem.h"
 #include "renderer/uniform.h"
+#include "renderer/image.h"
 
 namespace Engine
 {

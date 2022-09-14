@@ -170,6 +170,7 @@
   <ItemGroup>
     <ClCompile Include="src\files.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\renderer\image.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\renderer\swapchain.cpp" />
     <ClCompile Include="src\renderer\uniform.cpp" />
@@ -178,6 +179,7 @@
   <ItemGroup>
     <ClInclude Include="src\files.h" />
     <ClInclude Include="src\main.h" />
+    <ClInclude Include="src\renderer\image.h" />
     <ClInclude Include="src\renderer\queue.h" />
     <ClInclude Include="src\renderer\renderer.h" />
     <ClInclude Include="src\renderer\swapchain.h" />
