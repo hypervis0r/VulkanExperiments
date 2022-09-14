@@ -172,6 +172,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\renderer\swapchain.cpp" />
+    <ClCompile Include="src\renderer\uniform.cpp" />
     <ClCompile Include="src\renderer\vulkanmem.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -180,6 +181,7 @@
     <ClInclude Include="src\renderer\queue.h" />
     <ClInclude Include="src\renderer\renderer.h" />
     <ClInclude Include="src\renderer\swapchain.h" />
+    <ClInclude Include="src\renderer\uniform.h" />
     <ClInclude Include="src\renderer\vertex.h" />
     <ClInclude Include="src\renderer\vulkanmem.h" />
   </ItemGroup>

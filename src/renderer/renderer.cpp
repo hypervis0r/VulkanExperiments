@@ -292,7 +292,7 @@ namespace Engine
 		// Pipeline layout
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.setLayoutCount = 1;
-		pipelineLayoutInfo.pSetLayouts = &this->DescriptorSetLayout;
+		pipelineLayoutInfo.pSetLayouts = &this->DescriptorPool->DescriptorSetLayout;
 
 		this->PipelineLayout = this->LogicalDevice.createPipelineLayout(pipelineLayoutInfo);
 
@@ -425,7 +425,7 @@ namespace Engine
 		commandBuffer.bindVertexBuffers(0, 1, vertexBuffers.data(), offsets.data());
 		commandBuffer.bindIndexBuffer(this->indexBuffer->Buffer, 0, Index::IndexType);
 
-		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->PipelineLayout, 0, 1, &this->DescriptorSets[this->CurrentFrame], 0, nullptr);
+		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, this->PipelineLayout, 0, 1, &this->DescriptorPool->DescriptorSets[this->CurrentFrame], 0, nullptr);
 		commandBuffer.drawIndexed(this->indexBuffer->Objects.size(), 1, 0, 0, 0);
 
 		commandBuffer.endRenderPass();
@@ -449,107 +449,6 @@ namespace Engine
 		}
 	}
 
-	void Renderer::CreateDescriptorSetLayout()
-	{
-		vk::DescriptorSetLayoutBinding uboLayoutBinding(
-			0, 
-			vk::DescriptorType::eUniformBuffer, 1,
-			vk::ShaderStageFlagBits::eVertex);
-
-		vk::DescriptorSetLayoutCreateInfo layoutInfo(
-			{}, 1, &uboLayoutBinding);
-
-		this->DescriptorSetLayout = this->LogicalDevice.createDescriptorSetLayout(layoutInfo);
-	}
-
-	void Renderer::CreateUniformBuffers()
-	{
-		vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
-
-		this->UniformBuffers.resize(this->MAX_FRAMES_IN_FLIGHT);
-		this->UniformBuffersMemory.resize(this->MAX_FRAMES_IN_FLIGHT);
-
-		for (size_t i = 0; i < this->MAX_FRAMES_IN_FLIGHT; i++)
-		{
-			this->MemManager->CreateBuffer(
-				this->UniformBuffers[i],
-				this->UniformBuffersMemory[i],
-				bufferSize,
-				vk::BufferUsageFlagBits::eUniformBuffer,
-				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
-		}
-	}
-
-	void Renderer::UpdateUniformBuffer(uint32_t currentImage)
-	{
-		static auto startTime = std::chrono::high_resolution_clock::now();
-
-		auto currentTime = std::chrono::high_resolution_clock::now();
-		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-		UniformBufferObject ubo{};
-
-		// Model
-		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		// View
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		// Projection
-		ubo.proj = glm::perspective(
-			glm::radians(45.0f), 
-			this->Swapchain.SwapChainExtent.width / static_cast<float>(this->Swapchain.SwapChainExtent.height), 
-			0.1f, 10.0f);
-
-		// Dirty OpenGL y-coord hack
-		ubo.proj[1][1] *= -1;
-
-		auto data = this->MemManager->MapMemory(this->UniformBuffersMemory[currentImage], 0, sizeof(ubo));
-		std::memcpy(data, &ubo, sizeof(ubo));
-		this->MemManager->UnmapMemory(this->UniformBuffersMemory[currentImage]);
-	}
-
-	void Renderer::CreateDescriptorPool()
-	{
-		vk::DescriptorPoolSize poolSize(
-			vk::DescriptorType::eUniformBuffer, 
-			static_cast<uint32_t>(this->MAX_FRAMES_IN_FLIGHT));
-
-		vk::DescriptorPoolCreateInfo poolInfo(
-			{},
-			static_cast<uint32_t>(this->MAX_FRAMES_IN_FLIGHT),
-			1, &poolSize);
-
-		this->DescriptorPool = this->LogicalDevice.createDescriptorPool(poolInfo);
-	}
-
-	void Renderer::CreateDescriptorSets()
-	{
-		std::vector<vk::DescriptorSetLayout> layouts(this->MAX_FRAMES_IN_FLIGHT, this->DescriptorSetLayout);
-
-		vk::DescriptorSetAllocateInfo allocInfo(
-			this->DescriptorPool, layouts);
-
-		this->DescriptorSets = this->LogicalDevice.allocateDescriptorSets(allocInfo);
-
-		for (size_t i = 0; i < this->MAX_FRAMES_IN_FLIGHT; i++)
-		{
-			vk::DescriptorBufferInfo bufferInfo(
-				this->UniformBuffers[i],
-				0,
-				sizeof(UniformBufferObject));
-
-			vk::WriteDescriptorSet descWrite(
-				this->DescriptorSets[i],
-				0, 0,
-				1, vk::DescriptorType::eUniformBuffer,
-				nullptr,
-				&bufferInfo);
-
-			this->LogicalDevice.updateDescriptorSets(1, &descWrite, 0, nullptr);
-		}
-	}
-
 	void Renderer::InitializeVulkan()
 	{
 		CreateVulkanInstance();
@@ -568,11 +467,14 @@ namespace Engine
 
 		CreateRenderPass();
 
-		CreateUniformBuffers();
+		for (size_t i = 0; i < this->MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			Uniform<UniformBufferObject> uniform(*this->MemManager);
+			this->Uniforms.push_back(uniform);
+		}
 
-		CreateDescriptorSetLayout();
-		CreateDescriptorPool();
-		CreateDescriptorSets();
+		this->DescriptorPool = std::make_unique<VulkanDescriptorPool>(this->LogicalDevice, this->MemManager, this->MAX_FRAMES_IN_FLIGHT);
+		this->DescriptorPool->CreateDescriptorSets(this->Uniforms);
 
 		CreateGraphicsPipeline();
 		
@@ -614,18 +516,17 @@ namespace Engine
 		// Command pool
 		this->LogicalDevice.destroyCommandPool(this->CommandPool);
 
-		for (size_t i = 0; i < this->MAX_FRAMES_IN_FLIGHT; i++)
+		for (auto& uniform : this->Uniforms)
 		{
-			this->MemManager->DestroyBuffer(this->UniformBuffers[i], this->UniformBuffersMemory[i]);
+			uniform.Destroy(*this->MemManager);
 		}
 		
+		this->DescriptorPool->Destroy();
+
 		// Pipeline shit
 		this->LogicalDevice.destroyPipeline(this->GraphicsPipeline);
 		this->LogicalDevice.destroyPipelineLayout(this->PipelineLayout);
 		this->LogicalDevice.destroyRenderPass(this->RenderPass);
-
-		this->LogicalDevice.destroyDescriptorPool(this->DescriptorPool);
-		this->LogicalDevice.destroyDescriptorSetLayout(this->DescriptorSetLayout);
 
 		// Surface
 		this->VulkanInstance.destroySurfaceKHR(this->Surface);
@@ -651,6 +552,28 @@ namespace Engine
 		}
 
 		this->LogicalDevice.waitIdle();
+	}
+	
+	void Renderer::UpdateUniformWithNewData(Uniform<UniformBufferObject> Uniform)
+	{
+		static auto startTime = std::chrono::high_resolution_clock::now();
+
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+		UniformBufferObject ubo{};
+		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		ubo.proj = glm::perspective(
+			glm::radians(45.0f), 
+			this->Swapchain.SwapChainExtent.width / static_cast<float>(this->Swapchain.SwapChainExtent.height), 
+			0.1f, 10.0f);
+
+		ubo.proj[1][1] *= -1;
+
+		Uniform.UpdateUniformBuffer(*this->MemManager, ubo);
 	}
 
 	void Renderer::DrawFrame()
@@ -688,7 +611,7 @@ namespace Engine
 		constexpr std::array<vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 
 		// Update shader uniforms
-		UpdateUniformBuffer(this->CurrentFrame);
+		UpdateUniformWithNewData(this->Uniforms[this->CurrentFrame]);
 
 		vk::SubmitInfo submitInfo(
 			1, waitSemaphores.data(), waitStages.data(),

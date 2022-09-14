@@ -33,6 +33,7 @@
 #include "renderer/queue.h"
 #include "renderer/vertex.h"
 #include "renderer/vulkanmem.h"
+#include "renderer/uniform.h"
 
 namespace Engine
 {
@@ -93,11 +94,8 @@ namespace Engine
 		std::unique_ptr<VertexInputBuffer<Index>> indexBuffer;
 
 		// Uniform shit
-		std::vector<vk::Buffer> UniformBuffers;
-		std::vector<vk::DeviceMemory> UniformBuffersMemory;
-		vk::DescriptorSetLayout DescriptorSetLayout;
-		vk::DescriptorPool DescriptorPool;
-		std::vector<vk::DescriptorSet> DescriptorSets;
+		std::unique_ptr<VulkanDescriptorPool> DescriptorPool;
+		std::vector<Uniform<UniformBufferObject>> Uniforms;
 
 		void InitializeWindow();
 		void MainRenderLoop();
@@ -119,13 +117,6 @@ namespace Engine
 		void CreateRenderSurface();
 		void CreateGraphicsPipeline();
 		void CreateRenderPass();
-		
-		// Uniform shit
-		void CreateDescriptorSetLayout();
-		void CreateDescriptorPool();
-		void CreateDescriptorSets();
-		void CreateUniformBuffers();
-		void UpdateUniformBuffer(uint32_t currentImage);
 
 		// Shader shit
 		template<std::size_t N>
@@ -138,6 +129,8 @@ namespace Engine
 
 		// Synch shit
 		void CreateSyncObjects();
+
+		void UpdateUniformWithNewData(Uniform<UniformBufferObject> Uniform);
 
 	public:
 		uint16_t WindowWidth;
