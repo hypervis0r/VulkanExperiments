@@ -328,9 +328,6 @@ namespace Engine
 		this->vertexBuffer->Destroy();
 		this->indexBuffer->Destroy();
 
-		// Command pool
-		this->DeviceContext->LogicalDevice.destroyCommandPool(this->DeviceContext->CommandPool);
-
 		for (auto& uniform : this->Uniforms)
 		{
 			uniform.Destroy(*this->DeviceContext->MemManager);
@@ -344,13 +341,6 @@ namespace Engine
 		this->DeviceContext->LogicalDevice.destroyPipeline(this->GraphicsPipeline);
 		this->DeviceContext->LogicalDevice.destroyPipelineLayout(this->PipelineLayout);
 		this->DeviceContext->LogicalDevice.destroyRenderPass(this->RenderPass);
-
-		// Surface
-		this->DeviceContext->VulkanInstance.destroySurfaceKHR(this->DeviceContext->Surface);
-
-		// Device and instance
-		this->DeviceContext->LogicalDevice.destroy();
-		this->DeviceContext->VulkanInstance.destroy();
 
 		// Window
 		glfwDestroyWindow(this->Window);

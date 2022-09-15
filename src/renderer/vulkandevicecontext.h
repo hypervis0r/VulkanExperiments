@@ -73,5 +73,18 @@ namespace Engine
 
 			this->MemManager = std::make_unique<VulkanMemManager>(this->LogicalDevice, this->PhysicalDevice, this->CommandPool, this->Queues);
 		}
+
+		~VulkanDeviceContext()
+		{
+			// Command pool
+			this->LogicalDevice.destroyCommandPool(this->CommandPool);
+
+			// Surface
+			this->VulkanInstance.destroySurfaceKHR(this->Surface);
+
+			// Device and instance
+			this->LogicalDevice.destroy();
+			this->VulkanInstance.destroy();
+		}
 	};
 }
