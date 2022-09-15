@@ -27,6 +27,20 @@ namespace Engine
 		void CreateImageView(vk::Format format);
 		void CreateTextureSampler();
 
+		void DestroyImageView()
+		{
+			this->LogicalDevice.destroyImageView(this->ImageView);
+		}
+
+		void Destroy()
+		{
+			this->LogicalDevice.destroySampler(this->Sampler);
+
+			DestroyImageView();
+
+			this->MemManager->DestroyImage(this->VulkanImage, this->ImageMemory);
+		}
+
 		// Load from file
 		Image(vk::Device& device, std::shared_ptr<VulkanMemManager> memManager, const char* texturePath) :
 			LogicalDevice(device),

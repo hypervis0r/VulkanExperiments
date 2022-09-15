@@ -473,10 +473,10 @@ namespace Engine
 			this->Uniforms.push_back(uniform);
 		}
 
-		Image texture(this->LogicalDevice, this->MemManager, "textures/queen.jpg");
+		this->Texture = std::make_unique<Image>(this->LogicalDevice, this->MemManager, "textures/queen.jpg");
 
 		this->DescriptorPool = std::make_unique<VulkanDescriptorPool>(this->LogicalDevice, this->MemManager, this->MAX_FRAMES_IN_FLIGHT);
-		this->DescriptorPool->CreateDescriptorSets(this->Uniforms, texture);
+		this->DescriptorPool->CreateDescriptorSets(this->Uniforms, *this->Texture);
 
 		CreateGraphicsPipeline();
 		
@@ -524,6 +524,8 @@ namespace Engine
 		}
 		
 		this->DescriptorPool->Destroy();
+
+		this->Texture->Destroy();
 
 		// Pipeline shit
 		this->LogicalDevice.destroyPipeline(this->GraphicsPipeline);

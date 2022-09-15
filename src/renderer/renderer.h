@@ -93,6 +93,7 @@ namespace Engine
 		// TEMP
 		std::unique_ptr<VertexInputBuffer<Vertex>> vertexBuffer;
 		std::unique_ptr<VertexInputBuffer<Index>> indexBuffer;
+		std::unique_ptr<Image> Texture;
 
 		// Uniform shit
 		std::unique_ptr<VulkanDescriptorPool> DescriptorPool;
