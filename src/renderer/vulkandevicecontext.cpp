@@ -117,6 +117,8 @@ namespace Engine
 			if (IsPhysicalDeviceSuitable(device))
 			{
 				this->PhysicalDevice = device;
+				this->PhysicalDeviceProperties = this->PhysicalDevice.getProperties();
+
 				break;
 			}
 		}

@@ -48,8 +48,10 @@ namespace Engine
 		void CreateRenderSurface(GLFWwindow* Window);
 
 	public:
-		vk::Device LogicalDevice;
 		vk::PhysicalDevice PhysicalDevice;
+		vk::PhysicalDeviceProperties PhysicalDeviceProperties;
+		
+		vk::Device LogicalDevice;
 		std::unique_ptr<VulkanMemManager> MemManager;
 		vk::CommandPool CommandPool;
 
