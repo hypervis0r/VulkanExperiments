@@ -87,7 +87,11 @@ namespace Engine
 		// TODO: Add configuration
 		samplerInfo.magFilter = samplerInfo.minFilter = vk::Filter::eLinear;
 		samplerInfo.addressModeU = samplerInfo.addressModeV = samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
-		samplerInfo.anisotropyEnable = VK_FALSE; // TODO: Enable anisotropy
+		
+		// Anisotropy
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = this->DeviceContext->PhysicalDeviceProperties.limits.maxSamplerAnisotropy;
+
 		samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
 		samplerInfo.compareEnable = VK_FALSE;

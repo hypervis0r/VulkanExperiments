@@ -105,7 +105,12 @@ namespace Engine
 			swapChainAdequate = !details.Formats.empty() && !details.PresentModes.empty();
 		}
 
-		return indices.IsComplete() && extensionsSupported && swapChainAdequate;
+		auto supportedFeatures = device.getFeatures();
+
+		return indices.IsComplete() 
+			&& extensionsSupported 
+			&& swapChainAdequate
+			&& supportedFeatures.samplerAnisotropy;
 	}
 
 	void VulkanDeviceContext::PickPhysicalDevice()
@@ -147,6 +152,9 @@ namespace Engine
 		}
 
 		vk::PhysicalDeviceFeatures deviceFeatures{};
+
+		// Enable anisotropy
+		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
 		vk::DeviceCreateInfo createInfo(
 			{},
