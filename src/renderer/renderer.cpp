@@ -16,181 +16,13 @@ namespace Engine
 	}
 
 	template<std::size_t N>
-	bool Renderer::CheckVulkanLayerSupport(const std::span<const char* const, N> layers)
-	{
-		bool layerFound = false;
-		auto availableLayers = vk::enumerateInstanceLayerProperties();
-
-		for (const char* layerName : layers)
-		{
-			layerFound = false;
-
-			for (const auto& layerProperties : availableLayers)
-			{
-				if (std::strcmp(layerName, layerProperties.layerName) == 0)
-				{
-					layerFound = true;
-					break;
-				}
-			}
-
-			if (!layerFound)
-				return false;
-		}
-
-		return true;
-	}
-
-	void Renderer::CreateVulkanInstance()
-	{
-		if (this->ValidationLayersEnabled && !CheckVulkanLayerSupport(std::span{ this->ValidationLayers }))
-			throw std::runtime_error("Validation layers requested, but are not available.");
-
-		vk::ApplicationInfo appInfo(
-			"Hello Triangle",
-			VK_MAKE_VERSION(1, 0, 0),
-			"No Engine",
-			VK_MAKE_VERSION(1, 0, 0),
-			VK_API_VERSION_1_0);
-
-		uint32_t glfwExtensionCount = 0;
-		auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-		if (glfwExtensions == nullptr || glfwExtensionCount == 0)
-			throw std::runtime_error("Failed to get required GLFW instance extensions");
-
-		vk::InstanceCreateInfo createInfo(
-			{},
-			&appInfo,
-			0, nullptr,
-			glfwExtensionCount, glfwExtensions);
-
-		if (this->ValidationLayersEnabled)
-		{
-			createInfo.enabledLayerCount = this->ValidationLayers.size();
-			createInfo.ppEnabledLayerNames = this->ValidationLayers.data();
-		}
-
-		uint32_t extensionCount = 0;
-		vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-		std::printf("%d extensions supported\n", extensionCount);
-
-		this->VulkanInstance = vk::createInstance(createInfo);
-	}
-
-	template<std::size_t N>
-	bool Renderer::CheckDeviceExtensionSupport(const vk::PhysicalDevice& device, std::span<const char* const, N> extensions)
-	{
-		auto availableExtensions = device.enumerateDeviceExtensionProperties();
-
-		std::unordered_set<std::string> requiredExtensions(extensions.begin(), extensions.end());
-
-		for (const auto& extension : availableExtensions)
-		{
-			requiredExtensions.erase(extension.extensionName);
-		}
-
-		return requiredExtensions.empty();
-	}
-
-	bool Renderer::IsPhysicalDeviceSuitable(const vk::PhysicalDevice& device)
-	{
-		QueueFamilyIndices indices;
-		
-		indices.FindQueueFamilies(device, this->Surface);
-
-		auto extensionsSupported = CheckDeviceExtensionSupport(device, std::span{ this->DeviceExtentions });
-
-		auto swapChainAdequate = false;
-		if (extensionsSupported)
-		{
-			SwapChainSupportDetails details;
-			SwapChain::QuerySwapChainSupport(device, this->Surface, details);
-			swapChainAdequate = !details.Formats.empty() && !details.PresentModes.empty();
-		}
-
-		return indices.IsComplete() && extensionsSupported && swapChainAdequate;
-	}
-
-	void Renderer::PickPhysicalDevice()
-	{
-		auto physicalDevices = this->VulkanInstance.enumeratePhysicalDevices();
-
-		for (const auto& device : physicalDevices)
-		{
-			if (IsPhysicalDeviceSuitable(device))
-			{
-				this->PhysicalDevice = device;
-				break;
-			}
-		}
-	}
-
-	void Renderer::CreateLogicalDevice()
-	{
-		QueueFamilyIndices indices;
-
-		indices.FindQueueFamilies(this->PhysicalDevice, this->Surface);
-
-		const std::unordered_set<uint32_t> uniqueQueueFamilies = { indices.GraphicsFamily.value(), indices.PresentationFamily.value() };
-
-		std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-
-		float queuePriority = 1.0f;
-		for (const auto queueFamily : uniqueQueueFamilies)
-		{
-			vk::DeviceQueueCreateInfo queueCreateInfo(
-				{},
-				queueFamily,
-				1,
-				&queuePriority);
-
-			queueCreateInfos.push_back(queueCreateInfo);
-		}
-
-		vk::PhysicalDeviceFeatures deviceFeatures{};
-
-		vk::DeviceCreateInfo createInfo(
-			{},
-			queueCreateInfos.size(),
-			queueCreateInfos.data(),
-			0, nullptr,
-			this->DeviceExtentions.size(),
-			this->DeviceExtentions.data(),
-			&deviceFeatures);
-
-		// This is here for compatibility with older implementations
-		if (this->ValidationLayersEnabled)
-		{
-			createInfo.enabledLayerCount = this->ValidationLayers.size();
-			createInfo.ppEnabledLayerNames = this->ValidationLayers.data();
-		}
-
-		// Create the logical device
-		this->LogicalDevice = this->PhysicalDevice.createDevice(createInfo);
-
-		// Get queues
-		Queues.GetQueues(this->LogicalDevice, indices);
-	}
-
-	void Renderer::CreateRenderSurface()
-	{
-		vk::Win32SurfaceCreateInfoKHR createInfo(
-			{},
-			GetModuleHandle(nullptr), 
-			glfwGetWin32Window(this->Window));
-
-		this->Surface = this->VulkanInstance.createWin32SurfaceKHR(createInfo);
-	}
-
-	template<std::size_t N>
 	void Renderer::CreateShaderModule(const std::span<char, N> code, vk::ShaderModule& module)
 	{
 		vk::ShaderModuleCreateInfo createInfo{};
 		createInfo.codeSize = code.size();
 		createInfo.pCode = reinterpret_cast<uint32_t*>(code.data()); // TODO: I think this is wrong. Fuck you C++.
 
-		module = this->LogicalDevice.createShaderModule(createInfo);
+		module = this->DeviceContext->LogicalDevice.createShaderModule(createInfo);
 	}
 
 	void Renderer::CreateGraphicsPipeline()
@@ -294,7 +126,7 @@ namespace Engine
 		pipelineLayoutInfo.setLayoutCount = 1;
 		pipelineLayoutInfo.pSetLayouts = &this->DescriptorPool->DescriptorSetLayout;
 
-		this->PipelineLayout = this->LogicalDevice.createPipelineLayout(pipelineLayoutInfo);
+		this->PipelineLayout = this->DeviceContext->LogicalDevice.createPipelineLayout(pipelineLayoutInfo);
 
 		// Pipeline
 		vk::GraphicsPipelineCreateInfo pipelineInfo{};
@@ -314,10 +146,10 @@ namespace Engine
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 		pipelineInfo.basePipelineIndex = -1; // Optional
 
-		this->GraphicsPipeline = this->LogicalDevice.createGraphicsPipeline(VK_NULL_HANDLE, pipelineInfo).value;
+		this->GraphicsPipeline = this->DeviceContext->LogicalDevice.createGraphicsPipeline(VK_NULL_HANDLE, pipelineInfo).value;
 
-		this->LogicalDevice.destroyShaderModule(vertShaderModule);
-		this->LogicalDevice.destroyShaderModule(fragShaderModule);
+		this->DeviceContext->LogicalDevice.destroyShaderModule(vertShaderModule);
+		this->DeviceContext->LogicalDevice.destroyShaderModule(fragShaderModule);
 	}
 
 	void Renderer::CreateRenderPass()
@@ -357,29 +189,17 @@ namespace Engine
 			1, &subpass,
 			1, &dependency);
 
-		this->RenderPass = this->LogicalDevice.createRenderPass(renderPassInfo);
+		this->RenderPass = this->DeviceContext->LogicalDevice.createRenderPass(renderPassInfo);
 	}
 
 	void Renderer::CreateCommandBuffer()
 	{
 		vk::CommandBufferAllocateInfo allocInfo(
-			this->CommandPool,
+			this->DeviceContext->CommandPool,
 			vk::CommandBufferLevel::ePrimary,
 			this->MAX_FRAMES_IN_FLIGHT);
 
-		this->CommandBuffers = this->LogicalDevice.allocateCommandBuffers(allocInfo);
-	}
-
-	void Renderer::CreateCommandPool()
-	{
-		QueueFamilyIndices queueFamilyIndices;
-		queueFamilyIndices.FindQueueFamilies(this->PhysicalDevice, this->Surface);
-
-		vk::CommandPoolCreateInfo poolInfo(
-			vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-			queueFamilyIndices.GraphicsFamily.value());
-
-		this->CommandPool = this->LogicalDevice.createCommandPool(poolInfo);
+		this->CommandBuffers = this->DeviceContext->LogicalDevice.allocateCommandBuffers(allocInfo);
 	}
 
 	void Renderer::RecordCommandBuffer(vk::CommandBuffer& commandBuffer, uint32_t imageIndex)
@@ -443,39 +263,32 @@ namespace Engine
 
 		for (size_t i = 0; i < this->MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			this->ImageAvailableSemaphores.push_back(this->LogicalDevice.createSemaphore(semaphoreInfo));
-			this->RenderFinishedSemaphores.push_back(this->LogicalDevice.createSemaphore(semaphoreInfo));
-			this->InFlightFences.push_back(this->LogicalDevice.createFence(fenceInfo));
+			this->ImageAvailableSemaphores.push_back(this->DeviceContext->LogicalDevice.createSemaphore(semaphoreInfo));
+			this->RenderFinishedSemaphores.push_back(this->DeviceContext->LogicalDevice.createSemaphore(semaphoreInfo));
+			this->InFlightFences.push_back(this->DeviceContext->LogicalDevice.createFence(fenceInfo));
 		}
 	}
 
 	void Renderer::InitializeVulkan()
 	{
-		CreateVulkanInstance();
-		CreateRenderSurface();
-		PickPhysicalDevice();
-		CreateLogicalDevice();
+		this->DeviceContext = std::make_shared<VulkanDeviceContext>(this->Window, this->ValidationLayersEnabled);
 
-		CreateCommandPool();
+		this->Swapchain = SwapChain(this->DeviceContext, this->Window);
 
-		this->MemManager = std::make_shared<VulkanMemManager>(this->LogicalDevice, this->PhysicalDevice, this->CommandPool, this->Queues);
-
-		this->Swapchain = SwapChain(this->PhysicalDevice, this->LogicalDevice, this->Window);
-
-		this->Swapchain.CreateSwapChain(this->Surface);
+		this->Swapchain.CreateSwapChain(this->DeviceContext->Surface);
 		this->Swapchain.CreateImageViews();
 
 		CreateRenderPass();
 
 		for (size_t i = 0; i < this->MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			Uniform<UniformBufferObject> uniform(*this->MemManager);
+			Uniform<UniformBufferObject> uniform(*this->DeviceContext->MemManager);
 			this->Uniforms.push_back(uniform);
 		}
 
-		this->Texture = std::make_unique<Image>(this->LogicalDevice, this->MemManager, "textures/queen.jpg");
+		this->Texture = std::make_unique<Image>(this->DeviceContext, "textures/queen.jpg");
 
-		this->DescriptorPool = std::make_unique<VulkanDescriptorPool>(this->LogicalDevice, this->MemManager, this->MAX_FRAMES_IN_FLIGHT);
+		this->DescriptorPool = std::make_unique<VulkanDescriptorPool>(this->DeviceContext, this->MAX_FRAMES_IN_FLIGHT);
 		this->DescriptorPool->CreateDescriptorSets(this->Uniforms, *this->Texture);
 
 		CreateGraphicsPipeline();
@@ -488,12 +301,12 @@ namespace Engine
 			{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
 			{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
 		};
-		this->vertexBuffer = std::make_unique<VertexInputBuffer<Vertex>>(this->MemManager, vertices);
+		this->vertexBuffer = std::make_unique<VertexInputBuffer<Vertex>>(this->DeviceContext, vertices);
 
 		const std::vector<Index> indices = {
 			0, 1, 2, 2, 3, 0
 		};
-		this->indexBuffer = std::make_unique<VertexInputBuffer<Index>>(this->MemManager, indices);
+		this->indexBuffer = std::make_unique<VertexInputBuffer<Index>>(this->DeviceContext, indices);
 
 		CreateCommandBuffer();
 
@@ -505,9 +318,9 @@ namespace Engine
 		// Sync shit
 		for (size_t i = 0; i < this->MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			this->LogicalDevice.destroySemaphore(this->ImageAvailableSemaphores[i]);
-			this->LogicalDevice.destroySemaphore(this->RenderFinishedSemaphores[i]);
-			this->LogicalDevice.destroyFence(this->InFlightFences[i]);
+			this->DeviceContext->LogicalDevice.destroySemaphore(this->ImageAvailableSemaphores[i]);
+			this->DeviceContext->LogicalDevice.destroySemaphore(this->RenderFinishedSemaphores[i]);
+			this->DeviceContext->LogicalDevice.destroyFence(this->InFlightFences[i]);
 		}
 
 		this->Swapchain.Destroy();
@@ -516,11 +329,11 @@ namespace Engine
 		this->indexBuffer->Destroy();
 
 		// Command pool
-		this->LogicalDevice.destroyCommandPool(this->CommandPool);
+		this->DeviceContext->LogicalDevice.destroyCommandPool(this->DeviceContext->CommandPool);
 
 		for (auto& uniform : this->Uniforms)
 		{
-			uniform.Destroy(*this->MemManager);
+			uniform.Destroy(*this->DeviceContext->MemManager);
 		}
 		
 		this->DescriptorPool->Destroy();
@@ -528,16 +341,16 @@ namespace Engine
 		this->Texture->Destroy();
 
 		// Pipeline shit
-		this->LogicalDevice.destroyPipeline(this->GraphicsPipeline);
-		this->LogicalDevice.destroyPipelineLayout(this->PipelineLayout);
-		this->LogicalDevice.destroyRenderPass(this->RenderPass);
+		this->DeviceContext->LogicalDevice.destroyPipeline(this->GraphicsPipeline);
+		this->DeviceContext->LogicalDevice.destroyPipelineLayout(this->PipelineLayout);
+		this->DeviceContext->LogicalDevice.destroyRenderPass(this->RenderPass);
 
 		// Surface
-		this->VulkanInstance.destroySurfaceKHR(this->Surface);
+		this->DeviceContext->VulkanInstance.destroySurfaceKHR(this->DeviceContext->Surface);
 
 		// Device and instance
-		this->LogicalDevice.destroy();
-		this->VulkanInstance.destroy();
+		this->DeviceContext->LogicalDevice.destroy();
+		this->DeviceContext->VulkanInstance.destroy();
 
 		// Window
 		glfwDestroyWindow(this->Window);
@@ -555,7 +368,7 @@ namespace Engine
 			DrawFrame();
 		}
 
-		this->LogicalDevice.waitIdle();
+		this->DeviceContext->LogicalDevice.waitIdle();
 	}
 	
 	void Renderer::UpdateUniformWithNewData(Uniform<UniformBufferObject> Uniform)
@@ -577,20 +390,20 @@ namespace Engine
 
 		ubo.proj[1][1] *= -1;
 
-		Uniform.UpdateUniformBuffer(*this->MemManager, ubo);
+		Uniform.UpdateUniformBuffer(*this->DeviceContext->MemManager, ubo);
 	}
 
 	void Renderer::DrawFrame()
 	{
 		// Wait for previous frame to finish processing
-		vk::resultCheck(this->LogicalDevice.waitForFences(1, &this->InFlightFences[this->CurrentFrame], VK_TRUE, UINT64_MAX), "Fence dumb shit");
+		vk::resultCheck(this->DeviceContext->LogicalDevice.waitForFences(1, &this->InFlightFences[this->CurrentFrame], VK_TRUE, UINT64_MAX), "Fence dumb shit");
 
 		
 		uint32_t imageIndex = 0;
 		
 		try
 		{
-			imageIndex = this->LogicalDevice.acquireNextImageKHR(
+			imageIndex = this->DeviceContext->LogicalDevice.acquireNextImageKHR(
 				this->Swapchain.Swapchain, 
 				UINT64_MAX, 
 				this->ImageAvailableSemaphores[this->CurrentFrame], 
@@ -599,12 +412,12 @@ namespace Engine
 		// If the swap chain is out of date (resized, etc.), we need to recreate it
 		catch (vk::OutOfDateKHRError&)
 		{
-			this->Swapchain.RecreateSwapChain(this->Surface, this->RenderPass);
+			this->Swapchain.RecreateSwapChain(this->DeviceContext->Surface, this->RenderPass);
 			return;
 		}
 		
 		// Reset fence when we know we are operating on a frame.
-		vk::resultCheck(this->LogicalDevice.resetFences(1, &this->InFlightFences[this->CurrentFrame]), "Fence dumb shit");
+		vk::resultCheck(this->DeviceContext->LogicalDevice.resetFences(1, &this->InFlightFences[this->CurrentFrame]), "Fence dumb shit");
 
 		this->CommandBuffers[this->CurrentFrame].reset();
 
@@ -622,7 +435,7 @@ namespace Engine
 			1, &this->CommandBuffers[this->CurrentFrame],
 			1, signalSemaphores.data());
 
-		vk::resultCheck(this->Queues.GraphicsQueue.submit(1, &submitInfo, this->InFlightFences[this->CurrentFrame]),
+		vk::resultCheck(this->DeviceContext->Queues.GraphicsQueue.submit(1, &submitInfo, this->InFlightFences[this->CurrentFrame]),
 			"Failed to submit command buffer.");
 
 		const std::array<vk::SwapchainKHR, 1> swapChains = { this->Swapchain.Swapchain };
@@ -635,7 +448,7 @@ namespace Engine
 		// Present swap chain
 		try
 		{
-			auto presentResult = this->Queues.PresentationQueue.presentKHR(presentInfo);
+			auto presentResult = this->DeviceContext->Queues.PresentationQueue.presentKHR(presentInfo);
 
 			// vulkan-hpp specifies eSuboptimalKHR as success, but whatever
 			if (presentResult == vk::Result::eSuboptimalKHR)
@@ -643,7 +456,7 @@ namespace Engine
 		}
 		catch (vk::OutOfDateKHRError&)
 		{
-			this->Swapchain.RecreateSwapChain(this->Surface, this->RenderPass);
+			this->Swapchain.RecreateSwapChain(this->DeviceContext->Surface, this->RenderPass);
 		};
 
 		// Increment current frame so we can work on the next frame

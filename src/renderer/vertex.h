@@ -9,6 +9,7 @@
 #include <cstring>
 #include <memory>
 
+#include "renderer/vulkandevicecontext.h"
 #include "renderer/vulkanmem.h"
 
 namespace Engine
@@ -61,7 +62,7 @@ namespace Engine
 	class VertexInputBuffer
 	{
 	private:
-		std::shared_ptr<VulkanMemManager> MemManager;
+		std::shared_ptr<VulkanDeviceContext> DeviceContext;
 
 	public:
 		std::vector<T> Objects;
@@ -70,18 +71,18 @@ namespace Engine
 
 		void Destroy()
 		{
-			MemManager->DestroyBuffer(this->Buffer, this->BufferMemory);
+			this->DeviceContext->MemManager->DestroyBuffer(this->Buffer, this->BufferMemory);
 		}
 
-		VertexInputBuffer(std::shared_ptr<VulkanMemManager> manager, const std::vector<T>& verts)
-			: Objects(verts), MemManager(manager)
+		VertexInputBuffer(std::shared_ptr<VulkanDeviceContext> devCtx, const std::vector<T>& verts)
+			: Objects(verts), DeviceContext(devCtx)
 		{
 			const vk::DeviceSize bufferSize = sizeof(Objects[0]) * Objects.size();
 
 			// Create staging buffer
 			vk::Buffer stagingBuffer;
 			vk::DeviceMemory stagingBufferMemory;
-			this->MemManager->CreateBuffer(
+			this->DeviceContext->MemManager->CreateBuffer(
 				stagingBuffer,
 				stagingBufferMemory,
 				bufferSize,
@@ -89,20 +90,20 @@ namespace Engine
 				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
 			// Copy vertices to staging buffer
-			auto data = this->MemManager->MapMemory(stagingBufferMemory, 0, bufferSize);
+			auto data = this->DeviceContext->MemManager->MapMemory(stagingBufferMemory, 0, bufferSize);
 			std::memcpy(data, Objects.data(), static_cast<size_t>(bufferSize));
-			this->MemManager->UnmapMemory(stagingBufferMemory);
+			this->DeviceContext->MemManager->UnmapMemory(stagingBufferMemory);
 
-			this->MemManager->CreateBuffer(
+			this->DeviceContext->MemManager->CreateBuffer(
 				this->Buffer,
 				this->BufferMemory,
 				bufferSize,
 				vk::BufferUsageFlagBits::eTransferDst | T::BufferType,
 				vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-			this->MemManager->CopyBuffer(this->Buffer, stagingBuffer, bufferSize);
+			this->DeviceContext->MemManager->CopyBuffer(this->Buffer, stagingBuffer, bufferSize);
 
-			this->MemManager->DestroyBuffer(stagingBuffer, stagingBufferMemory);
+			this->DeviceContext->MemManager->DestroyBuffer(stagingBuffer, stagingBufferMemory);
 		}
 	};
 }

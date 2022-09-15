@@ -5,6 +5,7 @@
 #include <memory>
 #include <cstring>
 
+#include "renderer/vulkandevicecontext.h"
 #include "renderer/vulkanmem.h"
 
 namespace Engine
@@ -12,8 +13,7 @@ namespace Engine
 	class Image
 	{
 	private:
-		vk::Device& LogicalDevice;
-		std::shared_ptr<VulkanMemManager> MemManager;
+		std::shared_ptr<VulkanDeviceContext> DeviceContext;
 
 	public:
 		vk::Image VulkanImage;
@@ -29,22 +29,21 @@ namespace Engine
 
 		void DestroyImageView()
 		{
-			this->LogicalDevice.destroyImageView(this->ImageView);
+			this->DeviceContext->LogicalDevice.destroyImageView(this->ImageView);
 		}
 
 		void Destroy()
 		{
-			this->LogicalDevice.destroySampler(this->Sampler);
+			this->DeviceContext->LogicalDevice.destroySampler(this->Sampler);
 
 			DestroyImageView();
 
-			this->MemManager->DestroyImage(this->VulkanImage, this->ImageMemory);
+			this->DeviceContext->MemManager->DestroyImage(this->VulkanImage, this->ImageMemory);
 		}
 
 		// Load from file
-		Image(vk::Device& device, std::shared_ptr<VulkanMemManager> memManager, const char* texturePath) :
-			LogicalDevice(device),
-			MemManager(memManager)
+		Image(std::shared_ptr<VulkanDeviceContext> devCtx, const char* texturePath) :
+			DeviceContext(devCtx)
 		{
 			CreateTextureImage(texturePath);
 			CreateImageView(vk::Format::eR8G8B8A8Srgb);
@@ -52,9 +51,8 @@ namespace Engine
 		}
 
 		// Image move
-		Image(vk::Device& device, std::shared_ptr<VulkanMemManager> memManager,	vk::Image& image, vk::Format format) :
-			LogicalDevice(device),
-			MemManager(memManager)
+		Image(std::shared_ptr<VulkanDeviceContext> devCtx, vk::Image& image, vk::Format format) :
+			DeviceContext(devCtx)
 		{
 			CreateImageView(format);
 			CreateTextureSampler();

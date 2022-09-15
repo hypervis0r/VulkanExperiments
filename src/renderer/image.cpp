@@ -25,7 +25,7 @@ namespace Engine
 
 		createInfo.image = this->VulkanImage;
 
-		this->ImageView = this->LogicalDevice.createImageView(createInfo);
+		this->ImageView = this->DeviceContext->LogicalDevice.createImageView(createInfo);
 	}
 
 	void Image::CreateTextureImage(const char* texturePath)
@@ -40,20 +40,20 @@ namespace Engine
 		vk::Buffer stagingBuffer;
 		vk::DeviceMemory stagingBufferMemory;
 
-		this->MemManager->CreateBuffer(
+		this->DeviceContext->MemManager->CreateBuffer(
 			stagingBuffer,
 			stagingBufferMemory,
 			imageSize,
 			vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
-		auto data = this->MemManager->MapMemory(stagingBufferMemory, 0, imageSize);
+		auto data = this->DeviceContext->MemManager->MapMemory(stagingBufferMemory, 0, imageSize);
 		std::memcpy(data, pixels, static_cast<size_t>(imageSize));
-		this->MemManager->UnmapMemory(stagingBufferMemory);
+		this->DeviceContext->MemManager->UnmapMemory(stagingBufferMemory);
 
 		stbi_image_free(pixels);
 
-		this->MemManager->CreateImage(
+		this->DeviceContext->MemManager->CreateImage(
 			this->VulkanImage,
 			this->ImageMemory,
 			texWidth,
@@ -63,21 +63,21 @@ namespace Engine
 			vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 			vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-		this->MemManager->TransitionImageLayout(
+		this->DeviceContext->MemManager->TransitionImageLayout(
 			this->VulkanImage,
 			vk::Format::eR8G8B8A8Srgb,
 			vk::ImageLayout::eUndefined,
 			vk::ImageLayout::eTransferDstOptimal);
 
-		this->MemManager->CopyBufferToImage(this->VulkanImage, stagingBuffer, texWidth, texHeight);
+		this->DeviceContext->MemManager->CopyBufferToImage(this->VulkanImage, stagingBuffer, texWidth, texHeight);
 
-		this->MemManager->TransitionImageLayout(
+		this->DeviceContext->MemManager->TransitionImageLayout(
 			this->VulkanImage, 
 			vk::Format::eR8G8B8A8Srgb, 
 			vk::ImageLayout::eTransferDstOptimal, 
 			vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		this->MemManager->DestroyBuffer(stagingBuffer, stagingBufferMemory);
+		this->DeviceContext->MemManager->DestroyBuffer(stagingBuffer, stagingBufferMemory);
 	}
 
 	void Image::CreateTextureSampler()
@@ -97,6 +97,6 @@ namespace Engine
 		samplerInfo.minLod = 0.0f;
 		samplerInfo.maxLod = 0.0f;
 
-		this->Sampler = this->LogicalDevice.createSampler(samplerInfo);
+		this->Sampler = this->DeviceContext->LogicalDevice.createSampler(samplerInfo);
 	}
 }

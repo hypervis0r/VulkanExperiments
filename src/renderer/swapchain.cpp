@@ -2,15 +2,6 @@
 
 namespace Engine
 {
-	void SwapChain::QuerySwapChainSupport(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface, SwapChainSupportDetails& details)
-	{
-		vk::resultCheck(device.getSurfaceCapabilitiesKHR(surface, &details.Capabilities),
-			"Failed to get device surface capabilities.");
-
-		details.Formats = device.getSurfaceFormatsKHR(surface);
-		details.PresentModes = device.getSurfacePresentModesKHR(surface);
-	}
-
 	void SwapChain::ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats, vk::SurfaceFormatKHR& format)
 	{
 		for (const auto& availableFormat : availableFormats)
@@ -73,7 +64,7 @@ namespace Engine
 	void SwapChain::CreateSwapChain(vk::SurfaceKHR& surface)
 	{
 		SwapChainSupportDetails details;
-		QuerySwapChainSupport(this->PhysicalDevice, surface, details);
+		VulkanDeviceContext::QuerySwapChainSupport(this->DeviceContext->PhysicalDevice, surface, details);
 
 		vk::SurfaceFormatKHR surfaceFormat;
 		vk::PresentModeKHR presentMode;
@@ -105,7 +96,7 @@ namespace Engine
 			vk::ImageUsageFlagBits::eColorAttachment);
 
 		QueueFamilyIndices indices;
-		indices.FindQueueFamilies(this->PhysicalDevice, surface);
+		indices.FindQueueFamilies(this->DeviceContext->PhysicalDevice, surface);
 
 		const std::array<uint32_t, 2> queueFamilyIndices = { indices.GraphicsFamily.value(), indices.PresentationFamily.value() };
 
@@ -130,8 +121,8 @@ namespace Engine
 		// TODO: Come back to me later
 		createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-		this->Swapchain = this->LogicalDevice.createSwapchainKHR(createInfo);
-		this->SwapChainImages = this->LogicalDevice.getSwapchainImagesKHR(this->Swapchain);
+		this->Swapchain = this->DeviceContext->LogicalDevice.createSwapchainKHR(createInfo);
+		this->SwapChainImages = this->DeviceContext->LogicalDevice.getSwapchainImagesKHR(this->Swapchain);
 		this->SwapChainImageFormat = surfaceFormat.format;
 		this->SwapChainExtent = extent;
 	}
@@ -160,7 +151,7 @@ namespace Engine
 		{
 			createInfo.image = image;
 
-			this->SwapChainImageViews.push_back(this->LogicalDevice.createImageView(createInfo));
+			this->SwapChainImageViews.push_back(this->DeviceContext->LogicalDevice.createImageView(createInfo));
 		}
 	}
 
@@ -183,7 +174,7 @@ namespace Engine
 
 			framebufferInfo.pAttachments = attachments.data();
 
-			this->SwapChainFramebuffers.push_back(this->LogicalDevice.createFramebuffer(framebufferInfo));
+			this->SwapChainFramebuffers.push_back(this->DeviceContext->LogicalDevice.createFramebuffer(framebufferInfo));
 		}
 	}
 
@@ -198,7 +189,7 @@ namespace Engine
 			glfwWaitEvents();
 		}
 
-		this->LogicalDevice.waitIdle();
+		this->DeviceContext->LogicalDevice.waitIdle();
 
 		Destroy();
 
@@ -212,18 +203,18 @@ namespace Engine
 		// Framebuffers
 		for (auto& framebuffer : this->SwapChainFramebuffers)
 		{
-			this->LogicalDevice.destroyFramebuffer(framebuffer);
+			this->DeviceContext->LogicalDevice.destroyFramebuffer(framebuffer);
 		}
 		this->SwapChainFramebuffers.clear();
 
 		// Image views
 		for (auto& imageView : this->SwapChainImageViews)
 		{
-			this->LogicalDevice.destroyImageView(imageView);
+			this->DeviceContext->LogicalDevice.destroyImageView(imageView);
 		}
 		this->SwapChainImageViews.clear();
 
 		// Swap chain
-		this->LogicalDevice.destroySwapchainKHR(this->Swapchain);
+		this->DeviceContext->LogicalDevice.destroySwapchainKHR(this->Swapchain);
 	}
 }

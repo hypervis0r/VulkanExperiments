@@ -17,7 +17,7 @@ namespace Engine
 			static_cast<uint32_t>(poolSizes.size()), 
 			poolSizes.data());
 
-		this->DescriptorPool = this->LogicalDevice.createDescriptorPool(poolInfo);
+		this->DescriptorPool = this->DeviceContext->LogicalDevice.createDescriptorPool(poolInfo);
 	}
 
 	void VulkanDescriptorPool::CreateDescriptorSetLayout()
@@ -38,6 +38,6 @@ namespace Engine
 			static_cast<uint32_t>(bindings.size()), 
 			bindings.data());
 
-		this->DescriptorSetLayout = this->LogicalDevice.createDescriptorSetLayout(layoutInfo);
+		this->DescriptorSetLayout = this->DeviceContext->LogicalDevice.createDescriptorSetLayout(layoutInfo);
 	}
 }

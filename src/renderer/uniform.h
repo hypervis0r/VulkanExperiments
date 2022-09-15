@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.hpp>
 #include <memory>
 
+#include "renderer/vulkandevicecontext.h"
 #include "renderer/vulkanmem.h"
 #include "renderer/image.h"
 
@@ -49,14 +50,13 @@ namespace Engine
 	class VulkanDescriptorPool
 	{
 	private:
+		std::shared_ptr<VulkanDeviceContext> DeviceContext;
+
 		vk::DescriptorPool DescriptorPool;
-		vk::Device& LogicalDevice;
 		uint32_t PoolSize;
-		std::shared_ptr<VulkanMemManager> MemManager;
 		
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool(uint32_t PoolSize);
-
 
 	public:
 		vk::DescriptorSetLayout DescriptorSetLayout;
@@ -70,7 +70,7 @@ namespace Engine
 			vk::DescriptorSetAllocateInfo allocInfo(
 				this->DescriptorPool, layouts);
 
-			this->DescriptorSets = this->LogicalDevice.allocateDescriptorSets(allocInfo);
+			this->DescriptorSets = this->DeviceContext->LogicalDevice.allocateDescriptorSets(allocInfo);
 
 			for (size_t i = 0; i < this->PoolSize; i++)
 			{
@@ -101,13 +101,12 @@ namespace Engine
 				descWrites[1].descriptorCount = 1;
 				descWrites[1].pImageInfo = &imageInfo;
 
-				this->LogicalDevice.updateDescriptorSets(descWrites, nullptr);
+				this->DeviceContext->LogicalDevice.updateDescriptorSets(descWrites, nullptr);
 			}
 		}
 
-		VulkanDescriptorPool(vk::Device& device, std::shared_ptr<VulkanMemManager> memManager, uint32_t size) :
-			LogicalDevice(device),
-			MemManager(memManager),
+		VulkanDescriptorPool(std::shared_ptr<VulkanDeviceContext> devCtx, uint32_t size) :
+			DeviceContext(devCtx),
 			PoolSize(size)
 		{
 			CreateDescriptorPool(this->PoolSize);
@@ -116,8 +115,8 @@ namespace Engine
 
 		void Destroy()
 		{
-			this->LogicalDevice.destroyDescriptorPool(this->DescriptorPool);
-			this->LogicalDevice.destroyDescriptorSetLayout(this->DescriptorSetLayout);
+			this->DeviceContext->LogicalDevice.destroyDescriptorPool(this->DescriptorPool);
+			this->DeviceContext->LogicalDevice.destroyDescriptorSetLayout(this->DescriptorSetLayout);
 		}
 	};
 }

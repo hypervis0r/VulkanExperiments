@@ -9,22 +9,15 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+#include "renderer/vulkandevicecontext.h"
 #include "renderer/queue.h"
 
 namespace Engine
 {
-	struct SwapChainSupportDetails
-	{
-		vk::SurfaceCapabilitiesKHR Capabilities;
-		std::vector<vk::SurfaceFormatKHR> Formats;
-		std::vector<vk::PresentModeKHR> PresentModes;
-	};
-
 	class SwapChain
 	{
 	private:
-		vk::PhysicalDevice PhysicalDevice;
-		vk::Device LogicalDevice;
+		std::shared_ptr<VulkanDeviceContext> DeviceContext;
 		GLFWwindow* Window;
 
 		// Swap chain shit
@@ -39,8 +32,6 @@ namespace Engine
 		vk::Extent2D SwapChainExtent;
 		std::vector<vk::ImageView> SwapChainImageViews;
 		std::vector<vk::Framebuffer> SwapChainFramebuffers;
-		
-		static void QuerySwapChainSupport(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface, SwapChainSupportDetails& details);
 
 		void CreateSwapChain(vk::SurfaceKHR& surface);
 		void CreateImageViews();
@@ -48,10 +39,10 @@ namespace Engine
 		void Destroy();
 		void RecreateSwapChain(vk::SurfaceKHR& surface, vk::RenderPass& renderPass);
 
-		constexpr SwapChain(vk::PhysicalDevice& physicalDevice, vk::Device& device, GLFWwindow* window)
-			: LogicalDevice(device), PhysicalDevice(physicalDevice), Window(window) {}
+		SwapChain(std::shared_ptr<VulkanDeviceContext> devCtx, GLFWwindow* window)
+			: DeviceContext(devCtx), Window(window) {}
 
 		constexpr SwapChain()
-			: LogicalDevice(VK_NULL_HANDLE), PhysicalDevice(VK_NULL_HANDLE), Window(nullptr) {};
+			: DeviceContext(nullptr), Window(nullptr) {};
 	};
 }

@@ -6,7 +6,6 @@
 #include <span>
 #include <cstring>
 #include <optional>
-#include <unordered_set>
 #include <string>
 #include <limits>
 #include <algorithm>
@@ -29,6 +28,7 @@
 
 #include "files.h"
 
+#include "renderer/vulkandevicecontext.h"
 #include "renderer/swapchain.h"
 #include "renderer/queue.h"
 #include "renderer/vertex.h"
@@ -50,27 +50,12 @@ namespace Engine
 	private:
 		GLFWwindow* Window;
 
-		/*
-			Vulkan-specific members
-		*/
-		const std::array<const char*, 1> ValidationLayers = {
-			"VK_LAYER_KHRONOS_validation"
-		};
-		const std::array<const char*, 1> DeviceExtentions = {
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME
-		};
-
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 
-		vk::Instance VulkanInstance;
 		bool ValidationLayersEnabled;
-		vk::PhysicalDevice PhysicalDevice = VK_NULL_HANDLE;
-		vk::Device LogicalDevice = VK_NULL_HANDLE;
-		vk::SurfaceKHR Surface;
-		VulkanQueues Queues;
 
-		// smart ptr coz i want this initialized later
-		std::shared_ptr<VulkanMemManager> MemManager;
+		std::shared_ptr<VulkanDeviceContext> DeviceContext;
+
 
 		// Pipeline shit
 		vk::Pipeline GraphicsPipeline;
@@ -82,7 +67,7 @@ namespace Engine
 
 		// Command shit
 		std::vector<vk::CommandBuffer> CommandBuffers;
-		vk::CommandPool CommandPool;
+		
 
 		// Synch shit
 		std::vector<vk::Semaphore> ImageAvailableSemaphores;
@@ -100,6 +85,7 @@ namespace Engine
 		std::vector<Uniform<UniformBufferObject>> Uniforms;
 
 		void InitializeWindow();
+		void InitializeVulkan();
 		void MainRenderLoop();
 		void Cleanup();
 		void DrawFrame();
@@ -107,16 +93,7 @@ namespace Engine
 		/*
 			Vulkan-specific functions
 		*/
-		template<std::size_t N>
-		bool CheckVulkanLayerSupport(std::span<const char* const, N> layers);
-		template<std::size_t N>
-		bool CheckDeviceExtensionSupport(const vk::PhysicalDevice& device, std::span<const char* const, N> extensions);
-		void InitializeVulkan();
-		void CreateVulkanInstance();
-		bool IsPhysicalDeviceSuitable(const vk::PhysicalDevice& device);
-		void PickPhysicalDevice();
-		void CreateLogicalDevice();
-		void CreateRenderSurface();
+		
 		void CreateGraphicsPipeline();
 		void CreateRenderPass();
 
