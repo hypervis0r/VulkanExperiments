@@ -275,7 +275,7 @@ namespace Engine
 
 		this->Swapchain = SwapChain(this->DeviceContext, this->Window);
 
-		this->Swapchain.CreateSwapChain(this->DeviceContext->Surface);
+		this->Swapchain.CreateSwapChain();
 		this->Swapchain.CreateImageViews();
 
 		CreateRenderPass();
@@ -402,7 +402,7 @@ namespace Engine
 		// If the swap chain is out of date (resized, etc.), we need to recreate it
 		catch (vk::OutOfDateKHRError&)
 		{
-			this->Swapchain.RecreateSwapChain(this->DeviceContext->Surface, this->RenderPass);
+			this->Swapchain.RecreateSwapChain(this->RenderPass);
 			return;
 		}
 		
@@ -446,7 +446,7 @@ namespace Engine
 		}
 		catch (vk::OutOfDateKHRError&)
 		{
-			this->Swapchain.RecreateSwapChain(this->DeviceContext->Surface, this->RenderPass);
+			this->Swapchain.RecreateSwapChain(this->RenderPass);
 		};
 
 		// Increment current frame so we can work on the next frame

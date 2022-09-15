@@ -61,10 +61,10 @@ namespace Engine
 		extent = actualExtent;
 	}
 
-	void SwapChain::CreateSwapChain(vk::SurfaceKHR& surface)
+	void SwapChain::CreateSwapChain()
 	{
 		SwapChainSupportDetails details;
-		VulkanDeviceContext::QuerySwapChainSupport(this->DeviceContext->PhysicalDevice, surface, details);
+		VulkanDeviceContext::QuerySwapChainSupport(this->DeviceContext->PhysicalDevice, this->DeviceContext->Surface, details);
 
 		vk::SurfaceFormatKHR surfaceFormat;
 		vk::PresentModeKHR presentMode;
@@ -87,7 +87,7 @@ namespace Engine
 
 		vk::SwapchainCreateInfoKHR createInfo(
 			vk::SwapchainCreateFlagsKHR::Flags(),
-			surface,
+			this->DeviceContext->Surface,
 			imageCount,
 			surfaceFormat.format,
 			surfaceFormat.colorSpace,
@@ -96,7 +96,7 @@ namespace Engine
 			vk::ImageUsageFlagBits::eColorAttachment);
 
 		QueueFamilyIndices indices;
-		indices.FindQueueFamilies(this->DeviceContext->PhysicalDevice, surface);
+		indices.FindQueueFamilies(this->DeviceContext->PhysicalDevice, this->DeviceContext->Surface);
 
 		const std::array<uint32_t, 2> queueFamilyIndices = { indices.GraphicsFamily.value(), indices.PresentationFamily.value() };
 
@@ -178,7 +178,7 @@ namespace Engine
 		}
 	}
 
-	void SwapChain::RecreateSwapChain(vk::SurfaceKHR& surface, vk::RenderPass& renderPass)
+	void SwapChain::RecreateSwapChain(vk::RenderPass& renderPass)
 	{
 		// If window is minimized, block application until its visible again
 		int width = 0, height = 0;
@@ -193,7 +193,7 @@ namespace Engine
 
 		Destroy();
 
-		CreateSwapChain(surface);
+		CreateSwapChain();
 		CreateImageViews();
 		CreateFramebuffers(renderPass);
 	}

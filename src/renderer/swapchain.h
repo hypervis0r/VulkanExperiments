@@ -33,11 +33,11 @@ namespace Engine
 		std::vector<vk::ImageView> SwapChainImageViews;
 		std::vector<vk::Framebuffer> SwapChainFramebuffers;
 
-		void CreateSwapChain(vk::SurfaceKHR& surface);
+		void CreateSwapChain();
 		void CreateImageViews();
 		void CreateFramebuffers(vk::RenderPass& renderPass);
 		void Destroy();
-		void RecreateSwapChain(vk::SurfaceKHR& surface, vk::RenderPass& renderPass);
+		void RecreateSwapChain(vk::RenderPass& renderPass);
 
 		SwapChain(std::shared_ptr<VulkanDeviceContext> devCtx, GLFWwindow* window)
 			: DeviceContext(devCtx), Window(window) {}
