@@ -40,7 +40,6 @@ namespace Engine
 		bool CheckVulkanLayerSupport(std::span<const char* const, N> layers);
 		template<std::size_t N>
 		bool CheckDeviceExtensionSupport(const vk::PhysicalDevice& device, std::span<const char* const, N> extensions);
-		void InitializeVulkan();
 		void CreateVulkanInstance();
 		bool IsPhysicalDeviceSuitable(const vk::PhysicalDevice& device);
 		void PickPhysicalDevice();
